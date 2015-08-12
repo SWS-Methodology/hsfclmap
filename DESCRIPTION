@@ -1,0 +1,10 @@
+Package: hsfclmap
+Type: Package
+Title: Mapping between FCL and country-specific HS
+Version: 0.1
+Date: 2015-08-12
+Authors@R: 'Alexander Matrunich <alexander@matrunich.com> [aut,cre]'
+Maintainer: Alexander Matrunich <alexander@matrunich.com>
+Description: Mapping provided by Statistical Division of FAO.
+License: Copyright.
+LazyData: TRUE
