@@ -12,12 +12,15 @@ hsInRange <- function(hs, areacode, flowname, mapdataset, calculation = "groupin
     df_fcl <- plyr::ddply(df,
                           .variables = c("areacode", "flowname"),
                           .fun = function(subdf) {
-                            mapdataset <- mapdataset %>%
-                              filter(fao == areacode[1],
-                                     flow == flowname[1])
 
-                            if(nrow(mapdataset) == 0) return(rep.int(as.character(NA),
-                                                                     times = seq_len(nrow(subdf))))
+                            # Subsetting mapping file
+                            mapdataset <- mapdataset %>%
+                              filter(fao == subdf$areacode[1],
+                                     flow == subdf$flowname[1])
+
+                            if(nrow(mapdataset) == 0) return(data.frame(hs = subdf$hs,
+                                                                        fcl = as.character(NA),
+                                                                        stringsAsFactors = F))
 
                             fcl <- vapply(seq_len(nrow(subdf)),
                                           FUN = function(i) {

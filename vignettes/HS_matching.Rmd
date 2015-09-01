@@ -131,14 +131,11 @@ hsfclmap1 <- hsfclmap1 %>%
 
 ### Conversion of TL
 
-tldata1 <- tldata1 %>% 
-  sample_n(1) %>% 
-  mutate(fcl = hsInRange(hsext, reporter_fao, flow, hsfclmap1))
 
 
 
 ```
-
+### Parallel expirements 
 ```{r parallel}
 library(doParallel)
 library(foreach)
@@ -169,11 +166,19 @@ Totally it is expected to take `r (nrow(tldata1) / 10000) * 7.57 / 3600`. Half a
 ```{r}
 
 df <- tldata1 %>% 
-  sample_n(1000)
+  select(reporter_fao, flow, hsext) %>% 
+  distinct() #%>% 
+  # sample_n(1000)
 
 fcldf <- hsInRange(df$hsext, df$reporter_fao, df$flow, hsfclmap1, 
                     calculation = "grouping",
                     parallel = T)
+nrow(fcldf) == nrow(df)
+
+
+
+
+
 
 sum(is.na(fcldf$fcl))/nrow(fcldf)
 
@@ -182,15 +187,46 @@ inspect <- d %>% left_join(hsfclmap1,
                 by = c("areacode" = "fao", "flowname" = "flow"))
 
 inspect %>% 
-  filter(fromcode >= d$hs - 10000, tocode <= d$hs + 10000)
+  filter((fromcode >= d$hs & lag(fromcode,3 ) < d$hs) |
+           (fromcode < d$hs & lead(fromcode) >= d$hs) |
+           (fromcode > d$hs & lag(fromcode, 3) < d$hs)) %>% 
+  select(hs_tariff = hs, faoarea = areacode, flow = flowname, fromcode, tocode, fcl = fcl.y) %>% 
+  distinct()
 
-hsInRange(d$hs, d$areacode, d$flowname, hsfclmap1, calculation = "grouping",
-                    parallel = T)
 
 tldata1 %>% 
   filter(reporter_fao == d$areacode,
          flow == d$flowname,
          hsext == d$hs)
+
+tldata1 %>% 
+  filter(reporter_fao == d$areacode,
+         flow == d$flowname) %>% 
+  mutate(hslength = stringr::str_length(hs)) %>% 
+  group_by(hslength) %>% 
+  summarize(n = n())
+
+tldata1 %>% 
+  filter(reporter_fao == d$areacode,
+         flow == d$flowname) %>% 
+  sample_n(5)
+
+
+
+hsfclmap1 %>% 
+  filter(fao == d$areacode,
+         flow == d$flowname) %>% sample_n(10)
+ 
+hsfclmap %>% 
+  filter(fao == d$areacode,
+         flow == d$flowname) %>% sample_n(10)
+
+  maxlength %>% 
+    filter(fao == d$areacode, flow == d$flowname)
+  
+  mapmaxlength %>% 
+    filter(fao == d$areacode, flow == d$flowname)
+  
 ```
 
 
