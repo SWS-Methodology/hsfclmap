@@ -1,0 +1,131 @@
+---
+title: "Extraction of chapter's number from raw mdb-files"
+author: "Aleksandr Matrunich"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Extraction of chapter's number from raw mdb-files}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = F}
+options(width = 120) 
+knitr::opts_chunk$set(echo = F)
+suppressWarnings(suppressPackageStartupMessages(library(dplyr)))
+library(stringr)
+library(hsfclmap)
+library(fclcpcmap)
+
+subdir <- "OrangeBook"
+sourcedir <- "tradeR"
+
+
+source(file.path(Sys.getenv("HOME"), "r_adhoc", "trade_prevalid_testing", "setupconnection.R"))
+
+if(length(lapply(dir(file.path(Sys.getenv("HOME"), "r_adhoc", "privateFAO", subdir, sourcedir), 
+                     full.names = T), 
+                 source)) == 0) stop("Files for sourcing not found")
+
+data("hsfclmap")
+
+hsfclmap <- hsfclmap %>% 
+  mutate(tocode = trailingDigits(fromcode, tocode, digit = 9)) %>% 
+  manualCorrections()
+
+
+
+
+```
+
+To reduce wrong mapping we want to extract HS chapter component from string which contains full HS code.
+
+Firstly we check does length of HS code equal inside of every reporter-flow dataset.
+
+```{r}
+hsfclmap %>% 
+  mutate(fromlength = str_length(fromcode)) %>% 
+  group_by(area, flow, validyear) %>% 
+  select(fromlength) %>% 
+  group_by(fromlength, add = T) %>% 
+  summarize(n = n()) %>% 
+  mutate(diverse = dense_rank(n),
+         maxdiv = max(diverse)) %>% 
+  ungroup() %>% 
+  filter(maxdiv > 1) %>% 
+  left_join(hsfclmap %>% 
+              select(area, flow, validyear, fromcode) %>% 
+              mutate(fromlength = str_length(fromcode)),
+            by = c("area", "flow", "validyear", "fromlength")) %>% 
+  group_by(area, flow, validyear, fromlength) %>% 
+  sample_n(1) %>% 
+  as.data.frame()
+```
+
+```{r}
+hsfclmap %>% 
+  # select(fromcode, tocode) %>% 
+  mutate(hs2from = str_extract(fromcode, "^.{2}"),
+         hs2to   = str_extract(tocode, "^.{2}")) %>% 
+  # select(hs2from, hs2to) %>% 
+  # distinct() %>% 
+  filter(as.numeric(hs2from) > as.numeric(hs2to))
+```
+
+```{r}
+hsfclmap %>% 
+  filter(area == "CAN",
+         fromcode == "0708900000")
+
+hsfclmap %>% 
+  filter(area == "CAN",
+         fcl == "420")
+
+hsfclmap %>% 
+  filter(area == "CAN",
+         fcl == "1075")
+
+
+```
+
+```{r}
+hsfclmap %>% 
+  select(fromcode, tocode, fcl) %>% 
+  mutate(hs2from = str_extract(fromcode, "^.{2}"),
+         hs2to   = str_extract(tocode, "^.{2}")) %>% 
+  select(hs2from, hs2to) %>% 
+  distinct() 
+  
+```
+
+
+```{r}
+hsfclmap %>% 
+  mutate(hs2from = str_extract(fromcode, "^.{2}")) %>% 
+  filter(hs2from == "00")
+  
+```
+
+```{r}
+hsfclmap %>% 
+  mutate(hs2from = str_extract(fromcode, "^.{2}")) %>% 
+  select(hs2from) %>% 
+  anti_join(data.frame(hs2 = unique(str_extract(getAgriHSCodes(), "^.{2}")),
+                       stringsAsFactors = F),
+            by = c("hs2from" = "hs2")) %>% 
+  group_by(hs2from) %>% 
+  summarize(n = n()) %>% 
+  arrange(desc(n))
+```
+
+```{r}
+hsfclmap %>% 
+  mutate(hs2from = str_extract(fromcode, "^.{2}")) %>% 
+  filter(hs2from == "84") %>% 
+  sample_n(10)
+
+fclcpcmap %>% 
+  filter(fcl == "1300")
+```
+
+

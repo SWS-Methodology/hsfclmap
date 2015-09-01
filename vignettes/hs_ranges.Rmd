@@ -1,0 +1,140 @@
+---
+title: "How to work with ranges of HS-codes"
+author: "Aleksandr Matrunich"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{How to work with ranges of HS-codes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = F}
+options(width = 120) 
+knitr::opts_chunk$set(echo = F)
+suppressWarnings(suppressPackageStartupMessages(library(dplyr)))
+library(stringr)
+library(hsfclmap)
+source(file.path(Sys.getenv("HOME"),
+                 "r_adhoc",
+                 "privateFAO",
+                 "OrangeBook",
+                 "tradeR",
+                 "printTab.R"))
+
+hsfclmap <- hsfclmap %>% 
+  mutate(tocode = trailingZeros(fromcode, tocode))
+
+```
+
+The map on the HS-side consists of two columns which define range of HS-codes for matching to single FCL-code.
+
+```{r results = "asis"}
+hsfclmap %>% 
+  sample_n(6) %>% 
+  printTab(caption = "Example of links from MDB-files")
+```
+
+
+How many unique HS codes in fromcode field?
+```{r results = "asis"}
+hsfclmap %>% 
+  select(fromcode) %>% 
+  distinct() %>% 
+  summarize(unique_codes = n()) %>% 
+  printTab(caption = "In character format")
+
+hsfclmap %>% 
+  select(fromcode) %>% 
+  mutate(fromcode = as.numeric(fromcode)) %>% 
+  distinct() %>% 
+  summarize(unique_codes = n()) %>% 
+  printTab(caption = "In numeric format")
+
+hsfclmap %>% 
+  select(fromcode, tocode) %>% 
+  filter(fromcode != tocode) %>% 
+  select(fromcode) %>% 
+  mutate(fromcode = stringr::str_trim(fromcode)) %>% 
+  distinct() %>% 
+  mutate(codenum = as.numeric(fromcode)) %>% 
+  group_by(codenum) %>% 
+  mutate(n = n()) %>% 
+  ungroup() %>% 
+  filter(n > 1) %>% 
+  arrange(codenum) %>% 
+  mutate(id = dense_rank(codenum)) %>% 
+  select(id, fromcode, asnumeric = codenum) %>% 
+  as.data.frame() %>% 
+  printTab(caption = "HS codes what have non-unique numeric equivalent")
+
+```
+
+We could remove leading zeros, but how to detect differences between 02nd and 20th chapters?
+
+
+1. Fromcode must be less or equal than tocode.
+2. Tocode of previous row must be less than fromcode of current row.
+
+```{r, results = "asis"}
+hsfclmap %>% 
+  select(fromcode, tocode) %>% 
+  distinct() %>% 
+  mutate(fromnum = as.numeric(fromcode),
+         tonum   = as.numeric(tocode),
+         fromlessto = fromnum <= tonum) %>% 
+  filter(!fromlessto) %>% 
+  select(-fromlessto) %>% 
+  printTab(caption = "HS-codes where fromcode is less than tocode")
+```
+
+So we need to add a rule, if tocode is shoter than fromcode, add trailing zeros to tocode. But in some cases (fromcode = 29192 and tocode = 19192) it is a mistake.
+
+
+```{r results = "asis"}
+hsfclmap %>% 
+  select(area, flow, validyear, fromcode, tocode, fcl) %>% 
+  distinct() %>% 
+  mutate(fromnum = as.numeric(fromcode),
+         tonum   = as.numeric(tocode)) %>% 
+  group_by(area, flow) %>% 
+  arrange(fromnum) %>% 
+  mutate(tolessnextfrom = tonum < lead(fromnum)) %>% 
+  mutate(toinvestigate = !tolessnextfrom | 
+           !lag(tolessnextfrom)) %>% 
+  mutate(group_id = paste(area, flow, fromcode, tocode, sep = "-"),
+         group_id = ifelse(!tolessnextfrom, group_id, lag(group_id))) %>% 
+  filter(toinvestigate) %>% 
+  group_by(group_id) %>% 
+  mutate(fcl_div = length(unique(fcl)) > 1) %>% 
+  ungroup() %>% 
+  filter(fcl_div) %>% 
+  mutate(group_id = as.numeric(as.factor(group_id)),
+         id = dense_rank(group_id)) %>% 
+  select(id, area, flow, fromcode, tocode, fcl) %>% 
+  as.data.frame() %>% 
+  printTab(caption = "Links where next fromcode is not more than previous tocode and there are different FCL codes")
+  
+```
+
+# Trailing zeros
+
+The following table shows links where fromcode and tocode have different length. We need to add trailing zeros.
+```{r results = "asis"}
+hsfclmap %>% 
+    # select(fromcode, tocode) %>% 
+  # distinct() %>% 
+  filter(stringr::str_length(fromcode) != stringr::str_length(tocode)) %>% 
+  printTab()
+```
+
+
+# Corrections
+
+1. If tocode is shorter than fromcode, add to to code trailing zeros.
+2. Leading zeros will be automatically removed during conversion to numeric type.
+
+```{r}
+# hsfclmap %>% 
+  
+```

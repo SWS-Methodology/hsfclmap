@@ -1,0 +1,254 @@
+---
+title: "HS ranges"
+author: "Aleksandr Matrunich"
+date: "August 27, 2015"
+output: html_document
+---
+
+```{r, echo = F}
+options(width = 120) 
+knitr::opts_chunk$set(echo = F)
+suppressWarnings(suppressPackageStartupMessages(library(dplyr)))
+library(stringr)
+library(hsfclmap)
+library(fclcpcmap)
+
+subdir <- "OrangeBook"
+sourcedir <- "tradeR"
+
+
+source(file.path(Sys.getenv("HOME"), "r_adhoc", "trade_prevalid_testing", "setupconnection.R"))
+
+if(length(lapply(dir(file.path(Sys.getenv("HOME"), "r_adhoc", "privateFAO", subdir, sourcedir), 
+                     full.names = T), 
+                 source)) == 0) stop("Files for sourcing not found")
+
+data("hsfclmap")
+
+# source(file.path(Sys.getenv("HOME"), ".pwd.R"))
+
+trade_src <- src_postgres("sws_data", "localhost", 5432, "trade", .pwd, 
+                          options = "-c search_path=ess")
+
+agri_db <- tbl(trade_src, sql("
+select * from ess.agri
+"))
+
+
+hsfclmap <- hsfclmap %>% 
+  mutate(tocode = trailingDigits(fromcode, tocode, digit = 9),
+         validyear = as.integer(validyear),
+         validyear = ifelse(is.na(validyear), 0, validyear)) %>% 
+  manualCorrections() %>% 
+  mutate(fao = as.integer(fao))
+
+
+mapmaxlength <- hsfclmap %>% 
+  group_by(fao, flow) %>% 
+  summarise(mapmaxlength = max(str_length(fromcode))) %>% 
+  ungroup()
+
+
+
+
+
+### Extract TL data and calculate length of hs codes
+
+
+tldata <- agri_db %>% 
+  filter(year == "2011",
+         flow %in% c("1", "2")) %>% #Drop reexport and reimport 
+  collect() %>% 
+  mutate(flow = factor(flow, labels = c("Import", "Export"))) %>% 
+  group_by(reporter, flow) %>% 
+  mutate(maxlength = max(str_length(hs))) %>% 
+  ungroup()
+
+
+### Convertion of reporters' codes
+
+
+tldata <- tldata %>% 
+  mutate(reporter_fao = tradeproc::convertComtradeM49ToFAO(reporter))
+
+
+
+## Max length in TL
+
+
+tlmaxlength <- tldata %>% 
+  select(fao = reporter_fao,
+         flow,
+         maxlength) %>% 
+  mutate(flow = as.character(flow)) %>% 
+  group_by(fao, flow) %>% 
+  summarize(tlmaxlength = max(maxlength)) %>% 
+  ungroup()
+
+
+## Common max length
+
+
+maxlength <- tlmaxlength %>% 
+  left_join(mapmaxlength,
+            by = c("fao", "flow")) %>% 
+  mutate(extendtl = tlmaxlength < mapmaxlength,
+         extendmap = mapmaxlength < tlmaxlength) %>% 
+  mutate(tlhowmany = ifelse(extendtl, mapmaxlength - tlmaxlength, 0),
+          maphowmany = ifelse(extendmap, tlmaxlength - mapmaxlength, 0)) %>% 
+  select(fao, flow, tlhowmany, maphowmany)
+
+
+
+### Extension of HS-codes in TL
+
+
+tldata1 <- tldata %>% 
+  left_join(maxlength %>% select(-maphowmany),
+            by = c("reporter_fao" = "fao", "flow")) %>% 
+  filter(!is.na(tlhowmany))
+
+tldata1 <- tldata1 %>% 
+  mutate(hsext = as.numeric(trailingDigits2(hs, tlhowmany, 0)))
+
+
+
+
+
+### Extension of HS ranges in map
+
+
+hsfclmap1 <- hsfclmap %>% 
+  left_join(maxlength %>% select(-tlhowmany),
+            by = c("fao", "flow")) %>% 
+  filter(!is.na(maphowmany))
+
+hsfclmap1 <- hsfclmap1 %>% 
+  mutate(fromcode = as.numeric(trailingDigits2(fromcode, maphowmany, 0)),
+         tocode = as.numeric(trailingDigits2(tocode, maphowmany, 9)))
+
+
+
+### Conversion of TL
+
+tldata1 <- tldata1 %>% 
+  sample_n(1) %>% 
+  mutate(fcl = hsInRange(hsext, reporter_fao, flow, hsfclmap1))
+
+
+
+```
+
+```{r parallel}
+library(doParallel)
+library(foreach)
+registerDoParallel(cores=detectCores(all.tests=TRUE))
+
+df <- tldata1 %>% 
+  sample_n(10000)
+
+tests <- microbenchmark::microbenchmark(
+  notpar = hsInRange(df$hsext, df$reporter_fao, df$flow, hsfclmap1, 
+                    calculation = "grouping",
+                    parallel = F),
+  par = hsInRange(df$hsext, df$reporter_fao, df$flow, hsfclmap1, 
+                    calculation = "grouping",
+                    parallel = T),
+  times = 10L)
+```
+
+> print(tests)
+Unit: seconds
+   expr       min       lq      mean    median        uq       max neval
+ notpar 27.470985 27.54354 27.925076 27.805991 28.232779 28.850961    10
+    par  7.141453  7.20453  7.500217  7.574347  7.700204  7.938214    10
+    
+Totally it is expected to take `r (nrow(tldata1) / 10000) * 7.57 / 3600`. Half an hour? 8-0
+
+
+```{r}
+
+df <- tldata1 %>% 
+  sample_n(1000)
+
+fcldf <- hsInRange(df$hsext, df$reporter_fao, df$flow, hsfclmap1, 
+                    calculation = "grouping",
+                    parallel = T)
+
+sum(is.na(fcldf$fcl))/nrow(fcldf)
+
+d <- fcldf %>% filter(is.na(fcl)) %>% sample_n(1)
+inspect <- d %>% left_join(hsfclmap1,
+                by = c("areacode" = "fao", "flowname" = "flow"))
+
+inspect %>% 
+  filter(fromcode >= d$hs - 10000, tocode <= d$hs + 10000)
+
+hsInRange(d$hs, d$areacode, d$flowname, hsfclmap1, calculation = "grouping",
+                    parallel = T)
+
+tldata1 %>% 
+  filter(reporter_fao == d$areacode,
+         flow == d$flowname,
+         hsext == d$hs)
+```
+
+
+```{r}
+tldata1 <- tldata %>% 
+  left_join(maxlength,
+            by = c("reporter_fao" = "fao", "flow")) %>% 
+  mutate(extendtl = maxlength < maxlengthmap,
+         extendmap = maxlength > maxlengthmap,
+         howmany = ifelse(extendtl, maxlengthmap - maxlength, 0)) %>% 
+  filter(!is.na(howmany)) %>% 
+  mutate(hsext = paste0(hs, 
+                        vapply(howmany,
+                               FUN = function(x) {
+                                 paste0(rep.int(0, times = x), collapse = "")
+                               },
+                               FUN.VALUE = character(1)
+                        )),
+                        hs)
+
+```
+
+
+# Extension of HS-codes in the map
+
+## Info about length
+```{r}
+lengthformap <- tldata %>% 
+  select(reporter_fao, flow, maxlength, maxlengthmap, extendmap) %>% 
+  distinct() %>% 
+  mutate(howmany = ifelse(extendmap, maxlength - maxlengthmap, 0))
+
+```
+
+## Adding info to map and extend codes
+
+```{r}
+
+trailingDigits2 <- function(client, howmany, digit) {
+  paste0(client, 
+         vapply(howmany,
+                FUN = function(x) {
+                  paste0(rep.int(digit, times = x), collapse = "")
+                },
+                FUN.VALUE = character(1)
+         ))
+  
+}
+
+hsfclmap1 <- hsfclmap %>% 
+  left_join(lengthformap,
+            by = c("fao" = "reporter_fao", "flow")) %>% 
+  filter(!is.na(howmany))
+
+hsfclmap1 <- hsfclmap1 %>% # We lose here mappings of countries which are absent in TL dataset
+  mutate(fromcode = trailingDigits2(fromcode, howmany, 0),
+         tocode   = trailingDigits2(tocode, howmany, 9)) 
+
+
+```
+
