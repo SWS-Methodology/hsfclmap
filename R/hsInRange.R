@@ -3,32 +3,6 @@ hsInRange <- function(hs, areacode, flowname, mapdataset, calculation = "groupin
 
   if(!all.equal(length(hs), length(areacode), length(flowname))) stop("Vectors of different length")
 
-  if(calculation == "simple") {
-
-    vapply(seq_along(hs),
-           FUN = function(i) {
-             mapdataset <- mapdataset %>%
-               filter(fao == areacode[i] &
-                        flow == flowname[i])
-
-             if(nrow(mapdataset) == 0) return(as.character(NA))
-
-             mapdataset <- mapdataset %>%
-               filter(fromcode <= hs[i] &
-                        tocode >= hs[i])
-
-             if(nrow(mapdataset) == 0) return(as.character(NA))
-
-             mapdataset %>%
-               select(fcl) %>%
-               unlist %>%
-               '[['(1)
-           },
-           FUN.VALUE = character(1)
-    )
-
-  }
-
   if(calculation == "grouping") {
     df <- data.frame(hs = hs,
                      areacode = areacode,
