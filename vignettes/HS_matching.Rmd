@@ -43,6 +43,8 @@ hsfclmap <- hsfclmap %>%
   mutate(fao = as.integer(fao))
 
 
+# Max length of HS-codes in MDB-files
+
 mapmaxlength <- hsfclmap %>% 
   group_by(fao, flow) %>% 
   summarise(mapmaxlength = max(str_length(fromcode))) %>% 
