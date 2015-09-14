@@ -58,21 +58,16 @@ mapmaxlength <- hsfclmap %>%
 
 
 tldata <- agri_db %>% 
+  select(-hs2, -hs4, -hs6) %>% 
   filter(year == "2011",
          flow %in% c("1", "2")) %>% #Drop reexport and reimport 
   collect() %>% 
-  mutate(flow = factor(flow, labels = c("Import", "Export"))) %>% 
+  mutate(hs = stringr::str_extract(hs, "^[0-9]*")) %>% # Artifacts in reporters 646 and 208
+  mutate(flow = as.character(factor(flow, labels = c("Import", "Export")))) %>% 
   group_by(reporter, flow) %>% 
-  mutate(maxlength = max(str_length(hs))) %>% 
-  ungroup()
-
-
-### Convertion of reporters' codes
-
-
-tldata <- tldata %>% 
+  mutate(tlmaxlength = max(stringr::str_length(hs), na.rm = T)) %>% 
+  ungroup() %>% 
   mutate(reporter_fao = tradeproc::convertComtradeM49ToFAO(reporter))
-
 
 
 ## Max length in TL
@@ -81,10 +76,9 @@ tldata <- tldata %>%
 tlmaxlength <- tldata %>% 
   select(fao = reporter_fao,
          flow,
-         maxlength) %>% 
-  mutate(flow = as.character(flow)) %>% 
+         tlmaxlength) %>% 
   group_by(fao, flow) %>% 
-  summarize(tlmaxlength = max(maxlength)) %>% 
+  summarize(tlmaxlength = max(tlmaxlength, na.rm = T)) %>% 
   ungroup()
 
 
@@ -94,11 +88,11 @@ tlmaxlength <- tldata %>%
 maxlength <- tlmaxlength %>% 
   left_join(mapmaxlength,
             by = c("fao", "flow")) %>% 
-  mutate(extendtl = tlmaxlength < mapmaxlength,
-         extendmap = mapmaxlength < tlmaxlength) %>% 
-  mutate(tlhowmany = ifelse(extendtl, mapmaxlength - tlmaxlength, 0),
-          maphowmany = ifelse(extendmap, tlmaxlength - mapmaxlength, 0)) %>% 
-  select(fao, flow, tlhowmany, maphowmany)
+  group_by(fao, flow) %>% 
+  mutate(maxlength = max(tlmaxlength, mapmaxlength, na.rm = T)) %>% 
+  # na.rm here: some reporters are absent in map
+  #  122 145 180 224 276
+  ungroup()
 
 
 
@@ -106,28 +100,26 @@ maxlength <- tlmaxlength %>%
 
 
 tldata1 <- tldata %>% 
-  left_join(maxlength %>% select(-maphowmany),
-            by = c("reporter_fao" = "fao", "flow")) %>% 
-  filter(!is.na(tlhowmany))
+  select(-tlmaxlength) %>% 
+  left_join(maxlength %>% 
+              select(-tlmaxlength, -mapmaxlength),
+            by = c("reporter_fao" = "fao", "flow")) 
 
 tldata1 <- tldata1 %>% 
-  mutate(hsext = as.numeric(trailingDigits2(hs, tlhowmany, 0)))
-
-
-
-
+  mutate(hsext = as.numeric(trailingDigits2(hs, 
+                                            maxlength = maxlength,
+                                            digit = 0)))
 
 ### Extension of HS ranges in map
 
 
 hsfclmap1 <- hsfclmap %>% 
-  left_join(maxlength %>% select(-tlhowmany),
+  left_join(maxlength %>% 
+              select(-tlmaxlength, -mapmaxlength),
             by = c("fao", "flow")) %>% 
-  filter(!is.na(maphowmany))
-
-hsfclmap1 <- hsfclmap1 %>% 
-  mutate(fromcode = as.numeric(trailingDigits2(fromcode, maphowmany, 0)),
-         tocode = as.numeric(trailingDigits2(tocode, maphowmany, 9)))
+  filter(!is.na(maxlength)) %>% 
+  mutate(fromcode = as.numeric(trailingDigits2(fromcode, maxlength, 0)),
+         tocode = as.numeric(trailingDigits2(tocode, maxlength, 9)))
 
 
 
@@ -183,6 +175,8 @@ nrow(fcldf) == nrow(df)
 
 
 sum(is.na(fcldf$fcl))/nrow(fcldf)
+# 0.0335684 or 6864
+
 
 d <- fcldf %>% filter(is.na(fcl)) %>% sample_n(1)
 inspect <- d %>% left_join(hsfclmap1,
@@ -193,7 +187,8 @@ inspect %>%
            (fromcode < d$hs & lead(fromcode) >= d$hs) |
            (fromcode > d$hs & lag(fromcode, 3) < d$hs)) %>% 
   select(hs_tariff = hs, faoarea = areacode, flow = flowname, fromcode, tocode, fcl = fcl.y) %>% 
-  distinct()
+  distinct() %>% 
+  arrange(fromcode)
 
 
 tldata1 %>% 
