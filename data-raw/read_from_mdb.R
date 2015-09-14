@@ -75,7 +75,10 @@ hsfclmap2 <- hsfclmap2 %>%
   left_join(codes %>%
               rename_(fao = ~fao_code),
             by = c("area" = "acronyme")) %>%
-  mutate(fao = as.integer(fao))
+  mutate(area = as.integer(fao),
+         validyear = ifelse(year == "", 0L, as.integer(year))) %>%
+  select(-year, -fao) %>%
+  as.data.frame
 
 save(hsfclmap2,
      file = file.path("data",
