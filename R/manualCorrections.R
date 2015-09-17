@@ -11,6 +11,10 @@ manualCorrections <- function(map) {
                  map$tocode   == "0207430000" &
                  map$fcl      == "1075"]  <- "0207430000"
 
+  map$tocode[map$area == "BEL" &
+                 map$fromcode == "210609030" &
+                 map$tocode   == "21069030" &
+                 map$fcl      == "1232"]  <- "210609030"
   map
 
 }
