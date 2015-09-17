@@ -15,7 +15,7 @@ hsInRange <- function(hs, areacode, flowname, mapdataset, calculation = "groupin
 
                             # Subsetting mapping file
                             mapdataset <- mapdataset %>%
-                              filter(fao == subdf$areacode[1],
+                              filter(area == subdf$areacode[1],
                                      flow == subdf$flowname[1])
 
                             if(nrow(mapdataset) == 0) return(data.frame(hs = subdf$hs,
