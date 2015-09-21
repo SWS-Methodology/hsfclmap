@@ -19,7 +19,7 @@ hsInRange <- function(hs, areacode, flowname, mapdataset, calculation = "groupin
                                      flow == subdf$flowname[1])
 
                             if(nrow(mapdataset) == 0) return(data.frame(hs = subdf$hs,
-                                                                        fcl = as.character(NA),
+                                                                        fcl = as.integer(NA),
                                                                         stringsAsFactors = F))
 
                             fcl <- vapply(seq_len(nrow(subdf)),
@@ -31,7 +31,7 @@ hsInRange <- function(hs, areacode, flowname, mapdataset, calculation = "groupin
                                               filter(fromcode <= hs &
                                                        tocode >= hs)
 
-                                            if(nrow(mapdataset) == 0) return(as.character(NA))
+                                            if(nrow(mapdataset) == 0) return(as.integer(NA))
 
                                             mapdataset %>%
                                               select(fcl) %>%
