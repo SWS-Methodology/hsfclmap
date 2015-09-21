@@ -73,11 +73,11 @@ codes <- rbind(codes, c("VIE", 237))
 
 hsfclmap2 <- hsfclmap2 %>%
   left_join(codes %>%
-              rename_(fao = ~fao_code),
+              rename_(faoarea = ~fao_code),
             by = c("area" = "acronyme")) %>%
-  mutate(area = as.integer(fao),
+  mutate(faoarea = as.integer(faoarea),
          validyear = ifelse(year == "", 0L, as.integer(year))) %>%
-  select(-year, -fao) %>%
+  select(-year) %>%
   as.data.frame
 
 save(hsfclmap2,
