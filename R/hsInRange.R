@@ -18,6 +18,7 @@ hsInRange <- function(hs, areacode, flowname, mapdataset, calculation = "groupin
                               filter(area == subdf$areacode[1],
                                      flow == subdf$flowname[1])
 
+                            # If no corresponding records in map return empty df
                             if(nrow(mapdataset) == 0) return(data.frame(hs = subdf$hs,
                                                                         fcl = as.integer(NA),
                                                                         stringsAsFactors = F))
@@ -31,6 +32,7 @@ hsInRange <- function(hs, areacode, flowname, mapdataset, calculation = "groupin
                                               filter(fromcode <= hs &
                                                        tocode >= hs)
 
+                                            # If no corresponding HS range is available return empty integer
                                             if(nrow(mapdataset) == 0) return(as.integer(NA))
 
                                             mapdataset %>%
