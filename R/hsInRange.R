@@ -38,7 +38,7 @@ hsInRange <- function(hs, areacode, flowname, mapdataset, calculation = "groupin
                                               unlist %>%
                                               '[['(1)
                                           },
-                                          FUN.VALUE = character(1)
+                                          FUN.VALUE = integer(1)
                             )
 
                             data.frame(hs = subdf$hs, fcl = fcl, stringsAsFactors = F)
