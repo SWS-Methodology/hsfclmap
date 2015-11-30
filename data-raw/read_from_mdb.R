@@ -72,12 +72,13 @@ codes$Acronyme <- toupper(codes$Acronyme)
 names(codes) <- tolower(names(codes))
 codes <- rbind(codes, c("VIE", 237))
 
-hsfclmap21 <- hsfclmap2 %>%
+hsfclmap2 <- hsfclmap2 %>%
   left_join(codes %>%
               rename_(faoarea = ~fao_code),
             by = c("area" = "acronyme")) %>%
   rename_(mdbarea = ~area,
-          area = ~faoarea) %>%
+          area = ~faoarea,
+          mdbfcl = ~fclorig) %>%
   mutate(area = as.integer(area),
          validyear = ifelse(year == "", 0L, as.integer(year))) %>%
   mutate_(validyear = ~ifelse(validyear == 0L, NA, validyear)) %>%
@@ -92,7 +93,8 @@ hsfclmap21 <- hsfclmap2 %>%
                          ifelse(flow == "Export", 2L,
                                 NA))) %>%
   ## Manual corrections of typos
-  hsfclmap::manualCorrections()
+  hsfclmap::manualCorrections() %>%
+  select_(~validyear, ~area, ~flow, ~fromcode, ~tocode, ~fcl, ~mdbyear, ~mdbarea, ~mdbfcl)
 
 save(hsfclmap2,
      file = file.path("data",
