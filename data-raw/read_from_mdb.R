@@ -72,11 +72,13 @@ codes$Acronyme <- toupper(codes$Acronyme)
 names(codes) <- tolower(names(codes))
 codes <- rbind(codes, c("VIE", 237))
 
-hsfclmap2 <- hsfclmap2 %>%
+hsfclmap21 <- hsfclmap2 %>%
   left_join(codes %>%
               rename_(faoarea = ~fao_code),
             by = c("area" = "acronyme")) %>%
-  mutate(faoarea = as.integer(faoarea),
+  rename_(mdbarea = ~area,
+          area = ~faoarea) %>%
+  mutate(area = as.integer(area),
          validyear = ifelse(year == "", 0L, as.integer(year))) %>%
   mutate_(validyear = ~ifelse(validyear == 0L, NA, validyear)) %>%
   select(-year) %>%
