@@ -28,6 +28,7 @@ areas_years <- data.frame(dirnames = dir(directory, full.names = F), stringsAsFa
   filter(year >= 2009)
 
 hsfclmap2 <- bind_rows(plyr::ldply(areas_years$dirnames, function(dirname) {
+# hsfclmap2 <- bind_rows(plyr::ldply("BOT_2013", function(dirname) {
 
   area <- areas_years$area[areas_years$dirnames == dirname]
   year <- areas_years$year[areas_years$dirnames == dirname]
@@ -71,15 +72,25 @@ codes$Acronyme <- toupper(codes$Acronyme)
 names(codes) <- tolower(names(codes))
 codes <- rbind(codes, c("VIE", 237))
 
-hsfclmap2 <- hsfclmap2 %>%
+hsfclmap21 <- hsfclmap2 %>%
   left_join(codes %>%
               rename_(faoarea = ~fao_code),
             by = c("area" = "acronyme")) %>%
   mutate(faoarea = as.integer(faoarea),
          validyear = ifelse(year == "", 0L, as.integer(year))) %>%
   select(-year) %>%
-  as.data.frame
+  distinct_() %>%
+  # Removing leading/trailing zeros from HS, else we get
+  # NA during as.numeric()
+  mutate_each_(funs(stringr::str_trim),
+               c("fromcode", "tocode")) %>%
+  # Convert flow to numbers for further joining with tlmaxlength
+  mutate_(flow = ~ifelse(flow == "Import", 1L,
+                         ifelse(flow == "Export", 2L,
+                                NA))) %>%
+  ## Manual corrections of typos
+  hsfclmap::manualCorrections()
 
 save(hsfclmap2,
      file = file.path("data",
-                      "hsfclmap2.rdata"))
+                      "hsfclmap2.RData"))
