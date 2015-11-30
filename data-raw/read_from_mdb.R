@@ -78,6 +78,7 @@ hsfclmap2 <- hsfclmap2 %>%
             by = c("area" = "acronyme")) %>%
   mutate(faoarea = as.integer(faoarea),
          validyear = ifelse(year == "", 0L, as.integer(year))) %>%
+  mutate_(validyear = ~ifelse(validyear == 0L, NA, validyear)) %>%
   select(-year) %>%
   distinct_() %>%
   # Removing leading/trailing zeros from HS, else we get
