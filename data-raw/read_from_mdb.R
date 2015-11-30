@@ -72,7 +72,7 @@ codes$Acronyme <- toupper(codes$Acronyme)
 names(codes) <- tolower(names(codes))
 codes <- rbind(codes, c("VIE", 237))
 
-hsfclmap21 <- hsfclmap2 %>%
+hsfclmap2 <- hsfclmap2 %>%
   left_join(codes %>%
               rename_(faoarea = ~fao_code),
             by = c("area" = "acronyme")) %>%
@@ -82,8 +82,8 @@ hsfclmap21 <- hsfclmap2 %>%
   distinct_() %>%
   # Removing leading/trailing zeros from HS, else we get
   # NA during as.numeric()
-  mutate_each_(funs(stringr::str_trim),
-               c("fromcode", "tocode")) %>%
+  mutate_each_(funs = funs(str_trim),
+               vars = c("fromcode", "tocode")) %>%
   # Convert flow to numbers for further joining with tlmaxlength
   mutate_(flow = ~ifelse(flow == "Import", 1L,
                          ifelse(flow == "Export", 2L,
