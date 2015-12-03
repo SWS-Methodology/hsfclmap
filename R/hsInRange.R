@@ -4,12 +4,11 @@
 #' @export
 
 
-hsInRange <- function(hs, areacode, flowname, mapdataset, calculation = "grouping",
+hsInRange <- function(hs, areacode, flowname, mapdataset,
                       parallel = F) {
 
   if(!all.equal(length(hs), length(areacode), length(flowname))) stop("Vectors of different length")
 
-  if(calculation == "grouping") {
     df <- data.frame(hs = hs,
                      areacode = areacode,
                      flowname = flowname,
@@ -63,5 +62,4 @@ hsInRange <- function(hs, areacode, flowname, mapdataset, calculation = "groupin
 
     df
 
-  }
 }
