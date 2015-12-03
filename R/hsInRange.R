@@ -1,3 +1,9 @@
+#' Looks for corresponding FCL codes in country-specific
+#' mapping tables from MDB files
+#'
+#' @export
+
+
 hsInRange <- function(hs, areacode, flowname, mapdataset, calculation = "grouping",
                       parallel = F) {
 

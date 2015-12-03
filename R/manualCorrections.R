@@ -1,3 +1,8 @@
+#' Correction of mistakes in country-specific
+#' HS->FCL mapping tables from MDB files
+#' @export
+
+
 manualCorrections <- function(map) {
   map$tocode[map$area == 299 &
                map$fromcode == "29192" &
