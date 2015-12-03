@@ -5,8 +5,7 @@
 \title{Looks for corresponding FCL codes in country-specific
 mapping tables from MDB files}
 \usage{
-hsInRange(hs, areacode, flowname, mapdataset, calculation = "grouping",
-  parallel = F)
+hsInRange(hs, areacode, flowname, mapdataset, parallel = F)
 }
 \description{
 Looks for corresponding FCL codes in country-specific
