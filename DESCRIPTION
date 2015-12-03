@@ -8,5 +8,7 @@ Maintainer: Alexander Matrunich <alexander@matrunich.com>
 Description: Mapping provided by Statistical Division of FAO.
 License: Copyright.
 LazyData: TRUE
-Suggests: knitr
+Suggests:
+    knitr
 VignetteBuilder: knitr
+RoxygenNote: 5.0.1
