@@ -1,6 +1,6 @@
 #' Adds zeros to the end of hs column to make both lolumns of equal length
 #'
-#'
+#'@export
 
 trailingDigits <- function(from, to, digit) {
 
