@@ -18,14 +18,15 @@ readitemcodesmdb <- function(filename, table) {
 
 
 
-directory <- file.path("", "mnt", "essdata", "TradeSys", "TradeSys", "Countries")
-
+# directory <- file.path("", "mnt", "essdata", "TradeSys", "TradeSys", "Countries")
+directory <- file.path("C:", "users", "alexa", "Documents", "Countries")
+startyear <- 1946
 
 areas_years <- data.frame(dirnames = dir(directory, full.names = F), stringsAsFactors = F) %>%
   filter(str_detect(dirnames, "^[A-Z]{3}_[1-2][0-9]{3}$")) %>%
   mutate(area = str_extract(dirnames, "^[A-Z]{3}"),
          year = as.integer(str_extract(dirnames, "[1-2][0-9]{3}$"))) %>%
-  filter(year >= 2009)
+  filter(year >= startyear)
 
 hsfclmap2 <- bind_rows(plyr::ldply(areas_years$dirnames, function(dirname) {
 # hsfclmap2 <- bind_rows(plyr::ldply("BOT_2013", function(dirname) {
