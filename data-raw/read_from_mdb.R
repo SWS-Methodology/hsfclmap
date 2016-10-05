@@ -4,16 +4,35 @@ library(dplyr, warn.conflicts = F)
 library(stringr)
 
 readitemcodesmdb <- function(filename, table) {
-
-  # classes <- c("character", "character", "character", "character", "character", "character")
-
-  Hmisc::mdb.get(filename,
-                 colClasses = "character",
-                 stringsAsFactors = F,
-                 lowernames = T,
-                 tables = table) %>%
+  
+  if (!is.element(Sys.info()[["sysname"]], c("Linux", "Windows"))) 
+    stop(paste0("Your OS: ", Sys.info()[["sysname"]], ". Only Windows and Linux are supported"))
+  
+  if (Sys.info()[["sysname"]] == "Linux") {
+    
+    data <- Hmisc::mdb.get(filename,
+                   colClasses = "character",
+                   stringsAsFactors = F,
+                   lowernames = T,
+                   tables = table)
+    
+  }
+  
+  if (Sys.info()[["sysname"]] == "Windows") {
+    
+    if(Sys.getenv("R_ARCH") != "/i386")
+      stop("Please use 32 bit build of R to read mdb files in Windows.")
+    
+    mdbcon <- RODBC::odbcConnectAccess(filename)
+    data <- RODBC::sqlFetch(mdbcon, table, as.is = TRUE, stringsAsFactors = FALSE)
+    close(mdbcon)
+    colnames(data) <- tolower(colnames(data))
+  }
+  
+  data %>%
     select_(~fromcode, ~tocode, fclorig = ~faostat, ~year) %>%
     mutate_(fcl = ~as.integer(fclorig))
+  
 }
 
 
