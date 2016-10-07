@@ -43,7 +43,7 @@ extractitemtable <- function(dirname) {
   area <- areas_years$area[areas_years$dirnames == dirname]
   year <- areas_years$year[areas_years$dirnames == dirname]
   
-  if(dirname == "CLA_2002") dirname <- "ECU_2000"
+  if(dirname == "CLA_2002") dirname <- "ECU_2002" # Or ecu_2000?
   if(dirname == "BYE_2013") dirname <- "AZE_2013"
   
   filename <- file.path(directory, dirname, paste0(dirname, ".mdb"))
@@ -80,10 +80,6 @@ areas_years <- data.frame(dirnames = dir(directory, full.names = F), stringsAsFa
          year = as.integer(str_extract(dirnames, "[1-2][0-9]{3}$"))) %>%
   filter(year >= startyear)
 
-folders2skip <- c("IND_2000", "CIA_2002")
-
-areas_years <- areas_years %>% 
-  filter(!is.element(dirnames, folders2skip))
 
 hsfclmap2 <- bind_rows(plyr::ldply(areas_years, 
                                    extractitemtable, 
