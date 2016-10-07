@@ -37,6 +37,39 @@ readitemcodesmdb <- function(filename, table) {
 
 
 
+extractitemtable <- function(dirname) {
+  # hsfclmap2 <- bind_rows(plyr::ldply("BOT_2013", function(dirname) {
+  
+  area <- areas_years$area[areas_years$dirnames == dirname]
+  year <- areas_years$year[areas_years$dirnames == dirname]
+  
+  if(dirname == "CLA_2002") dirname <- "ECU_2000"
+  if(dirname == "BYE_2013") dirname <- "AZE_2013"
+  
+  filename <- file.path(directory, dirname, paste0(dirname, ".mdb"))
+  
+  code1 <- readitemcodesmdb(filename, "ItemCode1")
+  code2 <- readitemcodesmdb(filename, "ItemCode2")
+  
+  if(area == "INS" & year == 2013) code1$tocode[code1$tocode == "4058999"] <- "40589999"
+  
+  areanames <- data.frame(
+    area = area,
+    stringsAsFactors = F)
+  
+  code1 <- cbind(code1, areanames, flow = "Import", mdbyear = year, stringsAsFactors = F)
+  code2 <- cbind(code2, areanames, flow = "Export", mdbyear = year, stringsAsFactors = F)
+  
+  if("FALSE" %in% code1$area) message(paste0(dirname, " code1 ", sum(df$area == "FALSE")))
+  if("FALSE" %in% code2$area) message(paste0(dirname, " code2 ", sum(df$area == "FALSE")))
+  
+  df <- bind_rows(code1, code2) %>% as.data.frame
+  # df <- bind_rows(code1, code2, stringsAsFactors = F) %>% as.data.frame
+  
+  df
+  
+}
+
 # directory <- file.path("", "mnt", "essdata", "TradeSys", "TradeSys", "Countries")
 directory <- file.path("C:", "users", "alexa", "Documents", "Countries")
 startyear <- 1946
@@ -47,38 +80,15 @@ areas_years <- data.frame(dirnames = dir(directory, full.names = F), stringsAsFa
          year = as.integer(str_extract(dirnames, "[1-2][0-9]{3}$"))) %>%
   filter(year >= startyear)
 
-hsfclmap2 <- bind_rows(plyr::ldply(areas_years$dirnames, function(dirname) {
-# hsfclmap2 <- bind_rows(plyr::ldply("BOT_2013", function(dirname) {
+folders2skip <- c("IND_2000", "CIA_2002")
 
-  area <- areas_years$area[areas_years$dirnames == dirname]
-  year <- areas_years$year[areas_years$dirnames == dirname]
+areas_years <- areas_years %>% 
+  filter(!is.element(dirnames, folders2skip))
 
-  if(dirname == "CLA_2002") dirname <- "ECU_2000"
-  if(dirname == "BYE_2013") dirname <- "AZE_2013"
-
-  filename <- file.path(directory, dirname, paste0(dirname, ".mdb"))
-
-  code1 <- readitemcodesmdb(filename, "ItemCode1")
-  code2 <- readitemcodesmdb(filename, "ItemCode2")
-
-  if(area == "INS" & year == 2013) code1$tocode[code1$tocode == "4058999"] <- "40589999"
-
-  areanames <- data.frame(
-    area = area,
-    stringsAsFactors = F)
-
-  code1 <- cbind(code1, areanames, flow = "Import", mdbyear = year, stringsAsFactors = F)
-  code2 <- cbind(code2, areanames, flow = "Export", mdbyear = year, stringsAsFactors = F)
-
-  if("FALSE" %in% code1$area) message(paste0(dirname, " code1 ", sum(df$area == "FALSE")))
-  if("FALSE" %in% code2$area) message(paste0(dirname, " code2 ", sum(df$area == "FALSE")))
-
-  df <- bind_rows(code1, code2) %>% as.data.frame
-  # df <- bind_rows(code1, code2, stringsAsFactors = F) %>% as.data.frame
-
-  df
-
-}, .progress = "text", .inform = T))
+hsfclmap2 <- bind_rows(plyr::ldply(areas_years, 
+                                   extractitemtable, 
+                                   .progress = "text",
+                                   .inform = TRUE))
 
 ## Read area codes / names from Onno's map
 
