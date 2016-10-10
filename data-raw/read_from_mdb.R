@@ -4,6 +4,7 @@ library(dplyr, warn.conflicts = F)
 library(stringr)
 
 readitemcodesmdb <- function(filename, table) {
+
   
   if (!is.element(Sys.info()[["sysname"]], c("Linux", "Windows"))) 
     stop(paste0("Your OS: ", Sys.info()[["sysname"]], ". Only Windows and Linux are supported"))
@@ -47,9 +48,15 @@ extractitemtable <- function(dirname) {
   if(dirname == "BYE_2013") dirname <- "AZE_2013"
   
   filename <- file.path(directory, dirname, paste0(dirname, ".mdb"))
+
+  importtable <- "ItemCode1"
+  exporttable <- "ItemCode2"
+
+  if(dirname == "THA_2002") exporttable <- "itemcode2"
+  if(dirname %in% c("THA_2003", "THA_2005", "THA_2006")) exporttable <- "Itemcode2"
   
-  code1 <- readitemcodesmdb(filename, "ItemCode1")
-  code2 <- readitemcodesmdb(filename, "ItemCode2")
+  code1 <- readitemcodesmdb(filename, importtable)
+  code2 <- readitemcodesmdb(filename, exporttable)
   
   if(area == "INS" & year == 2013) code1$tocode[code1$tocode == "4058999"] <- "40589999"
   
@@ -71,7 +78,7 @@ extractitemtable <- function(dirname) {
 }
 
 # directory <- file.path("", "mnt", "essdata", "TradeSys", "TradeSys", "Countries")
-directory <- file.path("C:", "users", "alexa", "Documents", "Countries")
+directory <- file.path(Sys.getenv("HOME"), "Downloads", "Countries")
 startyear <- 1946
 
 areas_years <- data.frame(dirnames = dir(directory, full.names = F), stringsAsFactors = F) %>%
@@ -81,10 +88,10 @@ areas_years <- data.frame(dirnames = dir(directory, full.names = F), stringsAsFa
   filter(year >= startyear)
 
 
-hsfclmap2 <- bind_rows(plyr::ldply(areas_years, 
+hsfclmap2 <- bind_rows(plyr::ldply(areas_years$dirnames, 
                                    extractitemtable, 
                                    .progress = "text",
-                                   .inform = TRUE))
+                                   .inform = FALSE))
 
 ## Read area codes / names from Onno's map
 
