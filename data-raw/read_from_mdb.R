@@ -131,4 +131,5 @@ hsfclmap2 <- hsfclmap2 %>%
 
 save(hsfclmap2,
      file = file.path("data",
-                      "hsfclmap2.RData"))
+                      "hsfclmap2.RData"),
+     compress = "xz")
