@@ -1,7 +1,7 @@
 Package: hsfclmap
 Type: Package
 Title: Mapping table between country-specific HS codes and FCL codes
-Version: 0.2.0.9000
+Version: 0.2.0.9001
 Date: 2016-10-11
 Authors@R: 'Alexander Matrunich <alexander@matrunich.com> [aut,cre]'
 Maintainer: Alexander Matrunich <alexander@matrunich.com>

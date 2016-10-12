@@ -1,3 +1,7 @@
+# hsfclmap 0.2.0.9001
+
+Documentation for `hsfclmap2` is updated.
+
 # hsfclmap 0.2.0.9000
 
 * `hsfclmap2` dataset is updated and now includes all available 
