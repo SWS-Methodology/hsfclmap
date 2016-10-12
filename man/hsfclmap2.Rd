@@ -3,13 +3,26 @@
 \docType{data}
 \name{hsfclmap2}
 \alias{hsfclmap2}
-\title{Mappings between FCL and country specific HS starting from 2009.}
-\format{A data frame}
+\title{HS->FCL country/year specific mapping table.}
+\format{A data frame with 5922649 rows and 9 columns
+\describe{
+  \item{validyear}{Integer. Year for which the correspondence is valid.}
+  \item{area}{Integer. FAO area code.}
+  \item{flow}{Interger. Import/Export}
+  \item{fromcode}{Character. Starting HS code.}
+  \item{tocode}{Character. Ending HS code.}
+  \item{fcl}{Interger. FCL code.}
+  \item{mdbyear}{Integer. Year for which the original MDB-file was produced.}
+  \item{mdbarea}{Character. Area name from the original MDB-file.}
+  \item{mdbfcl}{Character. FCL code from the original MDB-file. It is as 
+  it was, not converted to integer and can differ from area column.}
+}}
 \usage{
 hsfclmap2
 }
 \description{
-Mappings between FCL and country specific HS starting from 2009.
+A dataset containing mapping table from Harmonized System country specific 
+codes to FAO Commodity List codes.
 }
 \keyword{datasets}
 
