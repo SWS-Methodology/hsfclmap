@@ -1,0 +1,87 @@
+---
+title: "Moving from HS+ to HS6"
+author: "Alexander Matrunich"
+date: '14 октября 2016 г '
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(stringr)
+library(ggplot2)
+library(dplyr, warn.conflicts = FALSE)
+```
+
+How many HS ranges in the map are wider than single HS6 code.
+
+```{r}
+data("hsfclmap2", package = "hsfclmap")
+
+hsfcl <- hsfclmap2 %>% 
+  mutate(hs6from = str_extract(fromcode, "^\\d{1,6}"),
+         hs6to   = str_extract(tocode, "^\\d{1,6}"))
+
+rm(hsfclmap2)
+gc()
+  
+hsfcl %>% 
+  summarize(sum(hs6from != hs6to)/n())
+```
+
+How many HS-to-FCL mapping records have one-to-many link. We take into account only left-hand side of HS range.
+
+```{r}
+fclinhs <- hsfcl %>% 
+  select(mdbyear, area, validyear, flow, hs6from, fcl) %>% 
+  group_by(mdbyear, area, validyear, flow, hs6from) %>% 
+  mutate(fclinhs = length(unique(fcl))) %>% 
+  ungroup()
+
+# Total share
+fclinhs %>% 
+  summarise(sum(fclinhs > 1) / n())
+
+# By year
+fclinhs %>% 
+  group_by(mdbyear) %>% 
+  summarise(one2manyprop = sum(fclinhs >1) / n()) %>% 
+  ggplot(aes(mdbyear, one2manyprop)) +
+  geom_path(stat = "identity")
+
+rm(fclinhs)
+gc()
+```
+
+How many duplicate links are in the map if we don't take into account year of map production (`mdbyear`).
+
+```{r}
+hsfcl %>% 
+  select(validyear, area, flow, fromcode, tocode, fcl) %>% 
+  distinct() %>% 
+  summarize(dupl_prop = 1 - n() / nrow(hsfcl))
+```
+
+So we can drop duplicates!
+
+```{r}
+hsfcluniq <- hsfcl %>% 
+  select(-starts_with("mdb")) %>% 
+  distinct()
+
+rm(hsfcl)
+gc()
+
+dim(hsfcluniq)
+```
+
+How many one-to-many HS6-to-FCL links now?
+
+```{r}
+hsfcluniq %>% 
+  select(validyear, area, flow, hs6from, fcl) %>% 
+  group_by(validyear, area, flow, hs6from) %>% 
+  summarize(fclnumb = length(unique(fcl))) %>% 
+  ungroup() %>% 
+  summarize(sum(fclnumb > 1) / n())
+```
+
