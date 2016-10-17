@@ -20,6 +20,8 @@ source(file.path(Sys.getenv("HOME"),
                  "privateFAO",
                  "OrangeBook",
                  "tradeR",
+                 # printTab is a helper function to prepare a table 
+                 # to be print in markdown
                  "printTab.R"))
 
 hsfclmap <- hsfclmap %>% 
