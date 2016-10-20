@@ -1,7 +1,7 @@
 ---
 title: "Moving from HS+ to HS6"
 author: "Alexander Matrunich"
-date: '14 октября 2016 г '
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
@@ -21,9 +21,6 @@ hsfcl <- hsfclmap2 %>%
   mutate(hs6from = str_extract(fromcode, "^\\d{1,6}"),
          hs6to   = str_extract(tocode, "^\\d{1,6}"))
 
-rm(hsfclmap2)
-gc()
-  
 hsfcl %>% 
   summarize(sum(hs6from != hs6to)/n())
 ```
@@ -48,17 +45,15 @@ fclinhs %>%
   ggplot(aes(mdbyear, one2manyprop)) +
   geom_path(stat = "identity")
 
-rm(fclinhs)
-gc()
 ```
 
 How many duplicate links are in the map if we don't take into account year of map production (`mdbyear`).
 
 ```{r}
-hsfcl %>% 
+hsfclmap2 %>% 
   select(validyear, area, flow, fromcode, tocode, fcl) %>% 
   distinct() %>% 
-  summarize(dupl_prop = 1 - n() / nrow(hsfcl))
+  summarize(dupl_prop = 1 - n() / nrow(hsfclmap2))
 ```
 
 So we can drop duplicates!
@@ -67,9 +62,6 @@ So we can drop duplicates!
 hsfcluniq <- hsfcl %>% 
   select(-starts_with("mdb")) %>% 
   distinct()
-
-rm(hsfcl)
-gc()
 
 dim(hsfcluniq)
 ```
