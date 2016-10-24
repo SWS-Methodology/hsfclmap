@@ -6,7 +6,7 @@
 \title{HS->FCL country/year specific mapping table.}
 \format{A data frame with 5922649 rows and 9 columns
 \describe{
-  \item{validyear}{Integer. Year for which the correspondence is valid.}
+  \item{validyear}{Integer. "It refers to the first year that the HS6+ code was used by the country in its files" (Carola).}
   \item{area}{Integer. FAO area code.}
   \item{flow}{Interger. Import/Export}
   \item{fromcode}{Character. Starting HS code.}

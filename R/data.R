@@ -5,10 +5,7 @@
 #'
 #' @format A data frame with 5922649 rows and 9 columns
 #' \describe{
-#'   \item{validyear}{Integer. Year for which the correspondence is valid. NA 
-#'   in case the correspondence is not year-specific and valid for all years. 
-#'   Probably there are could be conflicts between year-nonspecific 
-#'   correspondences from MDB files produced in different years.}
+#'   \item{validyear}{Integer. "It refers to the first year that the HS6+ code was used by the country in its files" (Carola).}
 #'   \item{area}{Integer. FAO area code.}
 #'   \item{flow}{Interger. Import/Export}
 #'   \item{fromcode}{Character. Starting HS code.}
