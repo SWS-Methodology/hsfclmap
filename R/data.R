@@ -25,3 +25,19 @@
 #'
 #' @format A data frame
 "adjustments"
+
+#' HS->FCL country/year specific mapping table without duplicate links.
+#' 
+#' A dataset containing mapping table from Harmonized System country specific 
+#' codes to FAO Commodity List codes. Also columns for dubugging of MDB-export process excluded.
+#'
+#' @format A data frame with 885013 rows and 6 columns
+#' \describe{
+#'   \item{startyear}{Integer. Year starting from which specified link is actual.}
+#'   \item{area}{Integer. FAO area code.}
+#'   \item{flow}{Interger. Import/Export}
+#'   \item{fromcode}{Character. Starting HS code.}
+#'   \item{tocode}{Character. Ending HS code.}
+#'   \item{fcl}{Interger. FCL code.}
+#' }
+"hsfclmap3"
