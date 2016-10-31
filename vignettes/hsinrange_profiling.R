@@ -5,7 +5,7 @@ esdataorig <- loadesdata(file.path(
   Sys.getenv("HOME"), 
   "ce_combinednomenclature_unlogged_2013.csv.gz"))
 
-esdata <- esdata2faoarea(esdataorig, loadgeonom())
+esdata13 <- esdata2faoarea(esdataorig, loadgeonom())
 
 smpl <- 10^5
 
@@ -16,7 +16,7 @@ esdatafcl <- esdata %>%
                  filter(str_detect(fromcode, "^\\d+$")))) 
   
 
-nrow(esdatafcl) / nrow(esdata)
+nrow(esdatafcl) / smpl
 
 sum(is.na(esdatafcl$fcl)) / nrow(esdatafcl)
 
