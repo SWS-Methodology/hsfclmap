@@ -1,3 +1,23 @@
+#' Prepares for numerical comparison vector of hs codes from 
+#' trade dataset with hs codes range from mapping table.
+#' 
+#' @param hs Vector of original hs codes from trade data set.
+#' @param mapdataset Data frame with mapping table containing 
+#'   at least columns area, flow, fromcode, tocode
+#' 
+#' @return A list with two components: 
+#'   * hs - vector with extended hs codes
+#'   * mapdataset - data frame with extended fromcode and to code
+#'   columns.
+#'   
+#' @details Alignes length of hs codes in three places: vector from trade 
+#'   dataset, fromcode and tocode columns of mapping dataset. 
+#'   Maximum length is determined and all shorter codes are extended 
+#'   on right-hand side: trade data hs code and mapping 
+#'   fromcode are extended by 0, mapping tocode is extended by 9. 
+#'   
+#' @export
+
 alignHSLength <- function(hs, mapdataset) {
   
   stopifnot(length(unique(mapdataset$area)) == 1)
