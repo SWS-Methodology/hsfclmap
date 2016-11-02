@@ -39,7 +39,10 @@ hsInRange <- function(hs,
                    flowname = flowname) %>% 
     mutate(id = row_number())
   
-  # 
+  # Splitting of trade dataset by area and flow
+  # and applying mapping function to each part
+  # TODO: define the function outside and refer to 
+  # it by name for easy performance profiling
   df_fcl <- plyr::ddply(
     df,
     .variables = c("areacode", "flowname"),
@@ -57,15 +60,24 @@ hsInRange <- function(hs,
           hs = subdf$hs,                                                
           fcl = as.integer(NA)))
       
+      # Align length of HS codes in map and dataset
+      # to make possible comparison of numbers
       aligned <- alignHSLength(subdf$hs, mapdataset)
       
+      #Replacing original hs codes by aligned versions
       subdf$hs <- aligned$hs
       mapdataset <- aligned$mapdataset
       
+      # Split original data.frame by row,
+      # and looking for matching fcl codes 
+      # for each input hs code.
+      # If there are multiple matchings we return
+      # all matches.
       fcl <- plyr::ldply(
         subdf$id,
         function(currentid) {
           
+          # Put single hs code into a separate variable
           hs <- subdf %>% 
             filter_(~id == currentid) %>% 
             select_(~hs) %>% 
@@ -75,7 +87,8 @@ hsInRange <- function(hs,
             filter_(~fromcode <= hs &
                       tocode >= hs)
           
-          # If no corresponding HS range is available return empty integer
+          # If no corresponding HS range is 
+          # available return empty integer
           if(nrow(mapdataset) == 0) fcl <- as.integer(NA)
           if(nrow(mapdataset) > 0) fcl <-  mapdataset %>%
             select_(~fcl) %>%
@@ -96,6 +109,8 @@ hsInRange <- function(hs,
   
   df <- df %>%
     rename_(hsorig = ~hs) %>% 
+    # Joining original trade dataset 
+    # with new dataset containing fcl codes
     left_join(df_fcl,
               by = c("id", "areacode", "flowname")) %>% 
     select_(~id, 
@@ -105,7 +120,5 @@ hsInRange <- function(hs,
             hsext = ~hs,
             ~fcl)
 
-  
   df
-  
 }
