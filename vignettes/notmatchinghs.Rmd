@@ -1,0 +1,136 @@
+---
+title: "Where are missing FCLs?"
+author: "Alex Matrunich"
+date: "November 3, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(stringr)
+library(dplyr, warn.conflicts = FALSE)
+```
+
+Let's find a couple of examples manually
+
+```{r manual, echo=FALSE}
+load(file.path(Sys.getenv("HOME"), "esdata13.RData"))
+rm("esdata13"); gc()
+data("hsfclmap3", package = "hsfclmap")
+```
+
+```{r somemissingfcl}
+esdatafcl13 %>% 
+  filter(is.na(fcl)) %>%
+  select(-fcl, -hsext) %>% 
+  sample_n(3) %>% 
+  mutate(hs2 = str_extract(hsorig, "^\\d{2}"),
+         hs4 = str_extract(hsorig, "^\\d{4}"),
+         hs6 = str_extract(hsorig, "^\\d{4,6}")) %>% 
+  left_join(hsfclmap3,
+              by = c("area", "flow")) %>%
+  mutate(
+    hs2from = str_extract(fromcode, "^\\d{2}"),
+    hs4from = str_extract(fromcode, "^\\d{4}"),
+    hs6from = str_extract(fromcode, "^\\d{4,6}")) %>% 
+  filter(hs2 == hs2from) %>% 
+  select(id, area, flow, hsorig, fromcode, tocode, hs4, hs4from, hs6, hs6from) %>%
+  arrange(area, flow, hs4, hs6) %>% 
+  as.data.frame
+
+  group_by(area, flow) %>% 
+  summarize(totaln = n(),
+            common2 = sum(hs2 == hs2from),
+            common4 = sum(hs4 == hs4from),
+            common6 = sum(hs6 == hs6from))
+
+esdatafcl13 %>% 
+  filter(is.na(fcl)) %>%
+  select(-fcl, -hsext) %>% 
+    sample_n(3) %>% 
+  left_join(hsfclmap3,
+              by = c("area", "flow")) %>%
+  mutate(hsdist = stringdist::stringdist(hsorig, fromcode)) %>% 
+  arrange(hsdist)
+
+              
+
+
+```
+
+hsfclmap in chapters of interest
+
+```{r}
+
+hsfclmap3 %>% 
+  select(fromcode) %>%
+  distinct() %>% 
+  mutate(fromcode = as.numeric(fromcode)) %>% 
+  mutate(hs2 = str_extract(fromcode, "^\\d{2}") #,
+         , hsln = str_length(fromcode)
+         ) %>% 
+  select(hs2) %>% 
+  distinct() %>% 
+  filter(!hs2 %in% sprintf("%02d", c(1:24, 33, 35, 38, 40:43, 50:53))) %>% 
+  arrange(hs2)
+
+```
+
+
+length of hs codes in mapping table
+
+```{r}
+hsfclmap3 %>% 
+  select(fromcode) %>% 
+  distinct() %>% 
+  mutate(hslen = str_length(fromcode)) %>% 
+  group_by(hslen) %>% 
+  summarize(hslencount = n())
+```
+
+
+zeros in the beginning of hs codes
+
+```{r}
+hsfclmap3 %>% 
+  select(fromcode) %>% 
+  distinct() %>% 
+  mutate(
+    hslen = str_length(fromcode),
+    zero1 = str_detect(fromcode, "^0"),
+    zero2 = str_detect(fromcode, "^00")) %>% 
+  group_by(hslen) %>% 
+  summarize(total = n(),
+            zero1 = sum(zero1),
+            zero2 = sum(zero2))
+```
+
+hs code screening:
+* chapter
+* length odd/even
+
+1. Remove leading zeros
+2. If odd length than chapter is in 1:9
+3. If even length than chapter is >=10
+4. Check chapter in the list 
+
+```{r}
+hscreen <- function(
+  hs,
+  chapters = c(1:24, 33, 35, 38, 40:43, 50:53)
+  ) {
+  hs <- stringr::str_replace(hs, "^0*", "")
+  oddlen <- stringr::str_length(hs) %% 2 == 1
+  hs2 <- dplyr::if_else(
+    oddlen, 
+    stringr::str_extract(hs, "^\\d{1}"),
+    stringr::str_extract(hs, "^\\d{2}"))
+  hs2 %in% chapters
+}
+
+hsfclmap3 %>% 
+  select(fromcode) %>% 
+  mutate(validhs = hscreen(fromcode)) %>% 
+  summarize(sum(validhs) / n())
+```
+

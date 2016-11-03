@@ -44,7 +44,7 @@ esdatafcl %>%
   ungroup() %>% 
   summarize(sum(nofcl)/n())
 
-esdatafcl %>% 
+esdatafcl13 %>% 
   group_by(area, id) %>% 
   summarize(nofcl = any(is.na(fcl))) %>% 
   group_by(area) %>% 
