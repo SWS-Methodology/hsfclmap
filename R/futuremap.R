@@ -46,6 +46,15 @@ loadesdata <- function(file = file.path(
   
 }
 
+
+#' Loads table for conversion of Geonom to FAO area list.
+#' 
+#' @return geonom2fao R-object stored in faoswsTrade package.
+#' 
+#' @details The function created to avoid working with local files. 
+#' It downloads the object from GitHub repository.
+#' @export
+#' 
 loadgeonom <- function() {
   
   file2save <- tempfile(fileext = ".RData")
@@ -61,6 +70,18 @@ loadgeonom <- function() {
   
   geonom2fao
 }
+
+#' Converts column `reporter` from Geonom codes to FAO area list codes.
+#' 
+#' @param data Data frame with Eurostat trade data, containing 
+#'   column called `reporter`.
+#' @param g2fmap Geonom to FAO area list mapping table: data frame 
+#'   containing columns geonom and fao.
+#'   
+#' @return Data frame, similar to the original `data`, but 
+#'   codes in `reporter` column converted.
+#' @import dplyr
+#' @export
 
 esdata2faoarea <- function(data, g2fmap) {
   
