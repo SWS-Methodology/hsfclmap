@@ -4,3 +4,5 @@
 *.Rproj
 inst/doc
 vignettes/rsconnect
+vignettes/*_cache
+

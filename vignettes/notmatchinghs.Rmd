@@ -1,0 +1,144 @@
+---
+title: "Where are missing FCLs?"
+author: "Alex Matrunich"
+date: "November 4, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE, cache=TRUE}
+knitr::opts_chunk$set(echo = FALSE)
+library(stringr)
+library(scales)
+library(dplyr, warn.conflicts = FALSE)
+
+load(file.path(Sys.getenv("HOME"), "esdata13.RData"))
+rm("esdata13"); gc()
+data("hsfclmap3", package = "hsfclmap")
+```
+
+# Summary 
+
+After conversion HS codes to FCL of 2013 Eurostat trade data we get `r esdatafcl13 %>% group_by(id) %>% summarize(nofcl = any(is.na(fcl))) %>% ungroup() %>% summarize(sum(nofcl)/n()) %>% unlist %>% unname %>% round(2) %>% percent` of records where HS code is not converted to FCL. `r scales::percent(round(sum(!unique(hsfclmap3$fcl) %in%  unique(esdatafcl13$fcl)) / length(unique(hsfclmap3$fcl)), 2))` of all unique FCL codes from mapping table are not found in resultant trade data set. `r esdatafcl13 %>% group_by(id) %>%   summarize(manyfcl = length(unique(fcl)) > 1) %>% ungroup() %>% summarize(sum(manyfcl) / n()) %>% unlist %>% unname %>% round(2) %>% percent` of all records have multiple matches. We have made some checks of HS ranges from original MDB files. All of them do not provide significant findings in dealing with low rate of successful mapping. HS codes from new trade data sets simply are absent in MDB mapping tables.
+
+__Disclaimer__: numbers above are based on sampled Eurostat data (100K records).
+
+We plan to recheck the numbers on full data set including Tariffline data. In case of confirmation we recommend to develop approaches to generate FCL/CPC trade data with less dependency on mapping tables from MDB files. For example, using of HS6 Comtrade data and employing of split ratios in case of one-to-many HS6->FCL links.
+
+# Validation of HS ranges from MDB
+
+## Requirements for HS ranges
+
+Valid HS range from MDB map complies with the following:
+
+* Only digits (several records failed);
+* `fromcode <= tocode` (less than a hundred of records failed);
+* HS codes conform to two-digit heading structure (XX.XX.XX... for HS-chapters 1-9, X.XX.XX... for HS-chapters 10+) and belong to HS-chapters of interest (4% of records failed)
+
+## Hands-on
+
+### Nonnumeric codes in HS 
+
+```{r notnumeric}
+
+hsfclmap3 %>% 
+  mutate(
+    fromnodigs = !str_detect(fromcode, "^\\d+$"),
+    tonodigs   = !str_detect(tocode, "^\\d+$")) %T>% 
+  {if(sum(.$fromnodigs | .$tonodigs) < 10)
+    print(filter(., fromnodigs | tonodigs) %>% 
+            select(area, flow, fromcode, tocode, fcl))
+    } %>% 
+  summarize(nodigs_total = sum(fromnodigs | tonodigs),
+            from_records_total = n())
+
+```
+
+### `fromcode` is greater than `tocode`
+
+```{r frombiggerto, warning=FALSE}
+hsfclmap3 %>% 
+  mutate_at(
+    vars(fromcode, tocode),
+    funs(as.numeric)) %>% 
+  filter(fromcode > tocode)
+```
+
+### Two-digit structure of HS codes and chapters of interest
+
+1. Remove leading zeros
+2. If odd length than chapter is in 1:9
+3. If even length than chapter is >=10
+4. Check chapter in the list 
+
+```{r hsinchapters}
+faochaps <-  c(1:24, 33, 35, 38, 40:43, 50:53)
+print(faochaps)
+validchap <- function(
+  hs,
+  chapters = faochaps
+  ) {
+  hs <- stringr::str_replace(hs, "^0*", "")
+  oddlen <- stringr::str_length(hs) %% 2 == 1
+  hs2 <- dplyr::if_else(
+    oddlen, 
+    stringr::str_extract(hs, "^\\d{1}"),
+    stringr::str_extract(hs, "^\\d{2}"))
+  hs2 %in% chapters
+}
+
+hsfclmap3 %>% 
+  mutate(nonvalidhs = !validchap(fromcode)) %T>% 
+  {print(summarize(
+    .,
+    notvalid_chap = sum(nonvalidhs),
+    total_rows = n(),
+    notvalid_chap_prop = notvalid_chap/total_rows))} %>% 
+  filter(nonvalidhs) %>%
+  select(-nonvalidhs) %>% 
+  sample_n(7)
+```
+
+
+
+```{r somemissingfcl, eval=FALSE}
+esdatafcl13 %>% 
+  filter(is.na(fcl)) %>%
+  select(-fcl, -hsext) %>% 
+  sample_n(3) %>% 
+  mutate(hs2 = str_extract(hsorig, "^\\d{2}"),
+         hs4 = str_extract(hsorig, "^\\d{4}"),
+         hs6 = str_extract(hsorig, "^\\d{4,6}")) %>% 
+  left_join(hsfclmap3,
+              by = c("area", "flow")) %>%
+  mutate(
+    hs2from = str_extract(fromcode, "^\\d{2}"),
+    hs4from = str_extract(fromcode, "^\\d{4}"),
+    hs6from = str_extract(fromcode, "^\\d{4,6}")) %>% 
+  filter(hs2 == hs2from) %>% 
+  select(id, area, flow, hsorig, fromcode, tocode, hs4, hs4from, hs6, hs6from) %>%
+  arrange(area, flow, hs4, hs6) %>% 
+  as.data.frame
+
+  group_by(area, flow) %>% 
+  summarize(totaln = n(),
+            common2 = sum(hs2 == hs2from),
+            common4 = sum(hs4 == hs4from),
+            common6 = sum(hs6 == hs6from))
+
+esdatafcl13 %>% 
+  filter(is.na(fcl)) %>%
+  select(-fcl, -hsext) %>% 
+    sample_n(3) %>% 
+  left_join(hsfclmap3,
+              by = c("area", "flow")) %>%
+  mutate(hsdist = stringdist::stringdist(hsorig, fromcode)) %>% 
+  arrange(hsdist)
+```
+
+
+# Possible additional directions to investigate
+
+* Consistency of HS6->FCL (extracted from resultant HS->FCL) links across reporters and years;
+* Consistency of HS6->FCL links with oficial (V&V) HS->FCL mapping table;
+* Consistency of HS6->FCL value split rations across years by reporter;
+* Width of HS ranges. How many levels of HS headings are included in the range? The last level either several levels? Does it depend on depth of the subheading?

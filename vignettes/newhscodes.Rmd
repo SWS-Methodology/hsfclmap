@@ -1,0 +1,38 @@
+---
+title: "New HS codes in trade data 2014"
+author: "Alex Matrunich"
+date: "November 5, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+es14 <- loadesdata()
+load(file.path(Sys.getenv("HOME"), "esdata13.RData"))
+rm("esdatafcl13"); gc()
+
+es14 <- es14 %>% esdata2faoarea(geonom)
+```
+
+```{r}
+es14newhs <- es14 %>% 
+  anti_join(esdata13, 
+            by = c("hs", "flow", "reporter")) %>% 
+  distinct()
+
+es14newhs %>% 
+  group_by(reporter) %>% 
+  summarize(n = n()) %>% 
+  arrange(desc(n))
+
+write.csv(es14newhs %>% 
+            select(reporter, flow, hs) %>% 
+            arrange(reporter, flow, hs), 
+          file = file.path(Sys.getenv("HOME"), 
+                           "eurostat14newhs.csv"),
+          row.names = FALSE, quote = FALSE)
+```
+

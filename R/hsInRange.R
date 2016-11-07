@@ -1,13 +1,34 @@
 #' Looks for corresponding FCL codes in country-specific
 #' mapping tables from MDB files
 #'
+#' @param hs Numeric or character vector with HS codes to convert to FCL.
+#' @param areacode Numeric or character vector with reporters' codes.
+#' @param flowname Numeric or character vector of trade direction.
+#' @param mapdataset Data frame with HS->FCL mapping with columns area,
+#'   flow, fromcode, tocode, fcl
+#'   registered with doParallel package.
+#'   
+#' @return Data frame with columns id, area, flow, hsorig, hsext, fcl. 
+#'   id holds row numbers of original dataset. hsorig is input hs. hsext is 
+#'   input hs with additional zeros if requires. If there are multiple 
+#'   HS->FCL matchings, all of them are returned with similar id. If 
+#'   there were no matching FCL codes, NA in fcl column is returned.
+#'   
+#' @details Input hs, areacode and flowname columns are used to build 
+#'   data frame with hs-codes to convert. Probably it is easier to 
+#'   pass a data frame, then separate vectors.
+#'
 #' @import dplyr
 #' @export
 
 
-hsInRange <- function(hs, areacode, flowname, mapdataset,
+hsInRange <- function(hs, 
+                      areacode,
+                      flowname,
+                      mapdataset,
                       parallel = FALSE) {
   
+  # Constructing of data.frame with original hs codes.
   if(!all.equal(length(hs), 
                 length(areacode), 
                 length(flowname)))
@@ -18,6 +39,10 @@ hsInRange <- function(hs, areacode, flowname, mapdataset,
                    flowname = flowname) %>% 
     mutate(id = row_number())
   
+  # Splitting of trade dataset by area and flow
+  # and applying mapping function to each part
+  # TODO: define the function outside and refer to 
+  # it by name for easy performance profiling
   df_fcl <- plyr::ddply(
     df,
     .variables = c("areacode", "flowname"),
@@ -35,15 +60,24 @@ hsInRange <- function(hs, areacode, flowname, mapdataset,
           hs = subdf$hs,                                                
           fcl = as.integer(NA)))
       
+      # Align length of HS codes in map and dataset
+      # to make possible comparison of numbers
       aligned <- alignHSLength(subdf$hs, mapdataset)
       
+      #Replacing original hs codes by aligned versions
       subdf$hs <- aligned$hs
       mapdataset <- aligned$mapdataset
       
+      # Split original data.frame by row,
+      # and looking for matching fcl codes 
+      # for each input hs code.
+      # If there are multiple matchings we return
+      # all matches.
       fcl <- plyr::ldply(
         subdf$id,
         function(currentid) {
           
+          # Put single hs code into a separate variable
           hs <- subdf %>% 
             filter_(~id == currentid) %>% 
             select_(~hs) %>% 
@@ -53,7 +87,8 @@ hsInRange <- function(hs, areacode, flowname, mapdataset,
             filter_(~fromcode <= hs &
                       tocode >= hs)
           
-          # If no corresponding HS range is available return empty integer
+          # If no corresponding HS range is 
+          # available return empty integer
           if(nrow(mapdataset) == 0) fcl <- as.integer(NA)
           if(nrow(mapdataset) > 0) fcl <-  mapdataset %>%
             select_(~fcl) %>%
@@ -74,6 +109,8 @@ hsInRange <- function(hs, areacode, flowname, mapdataset,
   
   df <- df %>%
     rename_(hsorig = ~hs) %>% 
+    # Joining original trade dataset 
+    # with new dataset containing fcl codes
     left_join(df_fcl,
               by = c("id", "areacode", "flowname")) %>% 
     select_(~id, 
@@ -83,7 +120,5 @@ hsInRange <- function(hs, areacode, flowname, mapdataset,
             hsext = ~hs,
             ~fcl)
 
-  
   df
-  
 }
