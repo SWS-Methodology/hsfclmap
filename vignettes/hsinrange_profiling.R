@@ -38,11 +38,11 @@ esdatafcl %>%
   ungroup() %>% 
   summarize(sum(manyfcl) / n())
 
-esdatafcl %>% 
+esdatafcl13 %>% 
   group_by(id) %>% 
   summarize(nofcl = any(is.na(fcl))) %>% 
   ungroup() %>% 
-  summarize(sum(nofcl)/n())
+  summarize(sum(nofcl)/n()) %>% unlist %>% unname
 
 esdatafcl13 %>% 
   group_by(area, id) %>% 
