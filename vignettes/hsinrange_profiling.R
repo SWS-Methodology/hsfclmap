@@ -7,7 +7,7 @@ esdataorig <- loadesdata(file.path(
 
 esdata13 <- esdata2faoarea(esdataorig, loadgeonom())
 
-smpl <- 10^5
+esmpl <- 10^5
 
 esdatafcl <- esdata %>% 
   sample_n(smpl) %>% 
@@ -22,3 +22,8 @@ sum(is.na(esdatafcl$fcl)) / nrow(esdatafcl)
 
 sum(!unique(hsfclmap3$fcl) %in% unique(esdatafcl$fcl)) / length(unique(hsfclmap3$fcl))
 
+save(list = c("esdata", "esdatafcl", "esdataorig"), 
+     file = file.path(Sys.getenv("HOME"), 
+                      "estrade13_14.RData"),
+     compress = "xz")
+     
