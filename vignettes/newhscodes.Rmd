@@ -7,21 +7,29 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr, warn.conflicts = FALSE)
+
+esdata13 <- loadesdata(
+  file.path(
+  Sys.getenv("HOME"), 
+  "ce_combinednomenclature_unlogged_2013.csv.gz"))
+
+esdata14 <- loadesdata(
+  file.path(
+  Sys.getenv("HOME"), 
+  "ce_combinednomenclature_unlogged_2014.csv.gz"))
+
 ```
 
-```{r}
-es14 <- loadesdata()
-load(file.path(Sys.getenv("HOME"), "esdata13.RData"))
-rm("esdatafcl13"); gc()
-
-es14 <- es14 %>% esdata2faoarea(geonom)
-```
 
 ```{r}
-es14newhs <- es14 %>% 
-  anti_join(esdata13, 
-            by = c("hs", "flow", "reporter")) %>% 
-  distinct()
+esdata14 %>% 
+  select(hs) %>% 
+  distinct() %>% 
+  anti_join(esdata13 %>% select(hs) %>% distinct(), 
+            by = c("hs")) %>% 
+  distinct() %>% arrange(hs)
 
 es14newhs %>% 
   group_by(reporter) %>% 
