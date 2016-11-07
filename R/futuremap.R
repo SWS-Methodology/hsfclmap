@@ -1,3 +1,16 @@
+#' Function to load raw Eurostat trade data from csv file and procees it.
+#' 
+#' @param file Source csv file path.
+#' 
+#' @details The function is copied and adapted from trade module. 
+#' The function returns records sufficed the following
+#' requirements: 
+#'   * the chapters of interest, 
+#'   * `stat_regime` #4, 
+#'   * numeric values in reporter, partner and hs columns, 
+#'   * length of hs codes is more than 2.
+#' @export
+
 loadesdata <- function(file = file.path(
   Sys.getenv("HOME"),
   "ce_combinednomenclature_unlogged_2014.csv.gz")
