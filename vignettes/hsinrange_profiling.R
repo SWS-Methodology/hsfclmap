@@ -1,24 +1,31 @@
+library(hsfclmap)
 library(stringr)
-library(dplyr, warn.coflicts = FALSE)
+library(dplyr, warn.conflicts = FALSE)
 library(foreach)
 library(doParallel)
 registerDoParallel(cores = detectCores(all.tests = TRUE))
 
-esdataorig <- loadesdata(file.path(
+esdata14 <- loadesdata(file.path(
   Sys.getenv("HOME"), 
   "ce_combinednomenclature_unlogged_2014.csv.gz"))
 
-esdata14 <- esdata2faoarea(esdataorig, loadgeonom())
+esdata14 <- esdata2faoarea(esdata14, loadgeonom())
 
 esmpl <- 10^5
 
 esdatafcl14 <- esdata14 %>% 
-  sample_n(smpl) %>% 
+  # sample_n(smpl) %>% 
   do(hsInRange(.$hs, .$reporter, .$flow, 
                hsfclmap3 %>% 
-                 filter(str_detect(fromcode, "^\\d+$")),
-               parallel = TRUE)) 
-  
+                 filter(str_detect(fromcode, "^\\d+$"),
+                        str_detect(tocode, "^\\d+$")),
+               parallel = FALSE)) 
+
+save("esdatafcl14", 
+     file = file.path(Sys.getenv("HOME"), 
+                      "esdatafcl14.RData"),
+     compress = "xz")
+
 esdatafcl <- esdatafcl14
 
 nrow(esdatafcl) / smpl
@@ -45,17 +52,31 @@ esdatafcl %>%
   ungroup() %>% 
   summarize(sum(manyfcl) / n())
 
-esdatafcl13 %>% 
+esdatafcl %>% 
   group_by(id) %>% 
   summarize(nofcl = any(is.na(fcl))) %>% 
   ungroup() %>% 
   summarize(sum(nofcl)/n()) %>% unlist %>% unname
 
-esdatafcl13 %>% 
-  group_by(area, id) %>% 
-  summarize(nofcl = any(is.na(fcl))) %>% 
-  group_by(area) %>% 
-  summarize(nofclprop = sum(nofcl)/n()) %>% 
-  ungroup() %>% 
-  arrange(desc(nofclprop))
+esdatafcl %T>%
+{print(paste("Total number of trade records:", 
+             nrow(.)))} %T>% 
+  {print(paste("Unique HS codes:", 
+                length(unique(.$hsorig))))} %>% 
+  filter(is.na(fcl)) %>% 
+  select(faoarea = area, flow, hs = hsorig) %>% 
+  arrange(faoarea, flow, hs) %T>%
+  {print(paste(
+    "Number of records with unmatched HS codes:",
+    nrow(.)))} %T>% 
+  write.csv(file = "esdata2014_nofcl.csv",
+            row.names = FALSE) %>% 
+  select(hs) %>% 
+  distinct() %T>% 
+  {print(paste("Unique unmatched HS codes:",
+               nrow(.)))} %>% 
+  write.csv(
+    file = "esdata2014_nofcl_unique_hs.csv",
+    row.names = FALSE)
+
 
