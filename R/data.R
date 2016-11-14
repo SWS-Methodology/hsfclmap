@@ -38,3 +38,10 @@
 #'   \item{fcl}{Interger. FCL code.}
 #' }
 "hsfclmap3"
+
+#' 6-digit HS codes what are of FAO's interest
+#'
+#' Taken from `HS2012-6 digits Standard.xls` provided by Claudia and stored in `data-raw` folder of hsfclmap package.
+#'   
+#' @format A character vector of length 1061
+"hs6faointerest"
