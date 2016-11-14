@@ -62,6 +62,9 @@ esdatafcl %>%
   ungroup() %>% 
   summarize(sum(nofcl)/n()) %>% unlist %>% unname
 
+
+# Printing statistics on unmapped HS codes
+# and saving the codes in csv files
 esdatafcl %T>%
 {print(paste("Total number of trade records:", 
              nrow(.)))} %T>% 
@@ -84,3 +87,33 @@ esdatafcl %T>%
     row.names = FALSE)
 
 
+
+hsunmatched <- esdatafcl %>%
+  filter(is.na(fcl)) %>% 
+  select(area, flow, hs = hsorig) %>% 
+  `<<-`(traderecordsunmatched, .) %>% 
+  select(hs) %>% 
+  distinct() %>% unlist %>% unname
+
+esdatafcl %>% 
+  select(-hsext) %>% 
+  filter(hsorig %in% hsunmatched) %T>% 
+  {cat("Total rows:", nrow(.), 
+       " NA FCL:", sum(is.na(.$fcl)), "\n")} %>% 
+  group_by(hsorig) %>% 
+  summarise(totalareas = length(unique(area)),
+            areasunmatched = length(unique(area[is.na(fcl)])),
+            totalflows = length(unique(flow)),
+            unmatchedshare = areasunmatched / totalareas) %>% 
+  ungroup() %T>% 
+  {cat("Total unique unmatched HS:", nrow(.), "\n")
+    hsunmatchedultimate <<- (.) %>% 
+      filter(unmatchedshare == 1)
+    } %>% 
+  filter(unmatchedshare < 1) %>% 
+  arrange(desc(unmatchedshare))
+
+esdatafcl %>% 
+  filter(hsorig %in% hsunmatchedultimate$hsorig) %>% 
+  sample_n(5) %>% 
+  select(faoarea = area, flow, cn = hsorig)
