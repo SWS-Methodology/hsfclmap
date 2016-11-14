@@ -1,9 +1,13 @@
 library(hsfclmap)
 library(stringr)
 library(dplyr, warn.conflicts = FALSE)
-library(foreach)
-library(doParallel)
-registerDoParallel(cores = detectCores(all.tests = TRUE))
+
+cores <- parallel::detectCores(all.tests = TRUE)
+if(cores > 1) {
+  library(foreach)
+  library(doParallel)
+  parallel::registerDoParallel(cores = cores)
+}
 
 esdata14 <- loadesdata(file.path(
   Sys.getenv("HOME"), 
