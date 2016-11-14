@@ -95,25 +95,28 @@ hsunmatched <- esdatafcl %>%
   select(hs) %>% 
   distinct() %>% unlist %>% unname
 
+
+unmappedhs <- esdatafcl %T>% 
+  { cat("Total records:", nrow(.), "\n") } %>% 
+  mutate(hs6 = stringr::str_extract(hsorig, "^\\d{2,6}")) %>% 
+  filter(hs6 %in% hs6faointerest) %T>% 
+  { cat("Total records of interest:", nrow(.), "\n") } %>% 
+  filter(is.na(fcl)) %T>% 
+  { cat("Records of interest with NA:", nrow(.), "\n") } %>% 
+  select(hsorig) %>% 
+  distinct() %T>% 
+  { cat("Unique unmapped CN8 codes:", nrow(.), "\n") } %>% 
+  unname %>% unlist
+  
+# How many unmapped HS codes when we look across all EU countries
 esdatafcl %>% 
   select(-hsext) %>% 
-  filter(hsorig %in% hsunmatched) %T>% 
-  {cat("Total rows:", nrow(.), 
-       " NA FCL:", sum(is.na(.$fcl)), "\n")} %>% 
+  mutate(hs6 = stringr::str_extract(hsorig, "^\\d{2,6}")) %>% 
+  filter(hsorig %in% hs6faointerest) %>% 
   group_by(hsorig) %>% 
-  summarise(totalareas = length(unique(area)),
-            areasunmatched = length(unique(area[is.na(fcl)])),
-            totalflows = length(unique(flow)),
-            unmatchedshare = areasunmatched / totalareas) %>% 
-  ungroup() %T>% 
-  {cat("Total unique unmatched HS:", nrow(.), "\n")
-    hsunmatchedultimate <<- (.) %>% 
-      filter(unmatchedshare == 1)
-    } %>% 
-  filter(unmatchedshare < 1) %>% 
-  arrange(desc(unmatchedshare))
-
-esdatafcl %>% 
-  filter(hsorig %in% hsunmatchedultimate$hsorig) %>% 
-  sample_n(5) %>% 
-  select(faoarea = area, flow, cn = hsorig)
+  mutate(fclpositive = sum(!is.na(fcl))) %>% 
+  ungroup() %>% 
+  filter(fclpositive == 0) %>% 
+  select(hsorig) %>% 
+  distinct() %>% 
+  nrow()
