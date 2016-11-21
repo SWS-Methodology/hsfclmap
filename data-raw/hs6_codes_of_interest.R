@@ -37,3 +37,12 @@ hs6faointerest <-  XLConnect::readWorksheetFromFile(
 
 save(hs6faointerest, 
      file = file.path("data", "hs6faointerest.RData"))
+
+
+hs6agri <-  XLConnect::readWorksheetFromFile(
+  file.path("data-raw", 
+            "HSagric_filter.xls"),
+  header = TRUE,
+  startCol = 1L, endCol = 2L,
+  startRow = 1L, endRow = 43L,
+  sheet = "Sheet1")
