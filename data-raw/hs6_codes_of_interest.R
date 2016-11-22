@@ -46,3 +46,8 @@ hs6agri <-  XLConnect::readWorksheetFromFile(
   startCol = 1L, endCol = 2L,
   startRow = 1L, endRow = 43L,
   sheet = "Sheet1")
+
+save(hs6agri,
+     file = file.path("data", "hs6agri.RData"), 
+     compress = "xz")
+

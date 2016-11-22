@@ -45,3 +45,26 @@
 #'   
 #' @format A character vector of length 1061
 "hs6faointerest"
+
+#' Another variant of HS codes of FAO's interest
+#' 
+#' Probably this one is better than previous `hs6faointerest` 
+#'   as we got it after Carola discovered a mistake in old data set.
+#' 
+#' @format A data frame with 42 rows and 2 columns
+#' \describe{
+#'   \item{FromCode}{Numeric. Lower limit of HS range.}
+#'   \item{ToCode}{Numeric. Upper limit of HS range.}
+#' }
+#' 
+#' @examples 
+#' \dontrun{
+#'    ... %>% 
+#'    # Subselection of HS6 falling in intervals
+#'    # http://stackoverflow.com/a/24766832
+#'    filter_(~findInterval(
+#'      hs6,
+#'      as.vector(do.call(rbind, hs6agri))) %% 2 != 0) %>% 
+#'    ...
+#' }
+"hs6agri"
