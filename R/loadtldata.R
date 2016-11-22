@@ -17,8 +17,11 @@ loadtldata <- function(file = file.path(
   Sys.getenv("HOME"),
   "ct_tariffline_unlogged_2014.csv.gz")) {
   
-  flog.info("Start reading in of the archive file")
+  flog.info("Archive file: %s", file)
   
+  hschaps <- c(1:24, 33, 35, 38, 40:43, 50:53) 
+
+  flog.info("Start reading the archive file")
   readr::read_csv(file,
                   na = "NA",
                   skip = 1L,
@@ -31,18 +34,31 @@ loadtldata <- function(file = file.path(
                     "hs"
                   )
   ) %T>% 
-    {flog.info("Tariffline data records read: %s", nrow(.))} %>% 
-    filter_(~chapter %in%
-              sprintf("%02d", 
-                      c(1:24, 33, 35, 38, 40:43, 50:53))) %T>%
+    {flog.info("Tariffline data records read: %s", nrow(.))} %T>% 
+    {flog.info("HS chapters to select: %s", 
+               paste0(hschaps, collapse = ", "))} %>% 
+    filter_(~chapter %in% sprintf("%02d", hschaps)) %T>%
     {flog.info("Records after filtering by HS-chapters: %s",
               nrow(.))} %>% 
-    mutate_(nonnumerichs = ~stringr::str_detect(hs, "[^\\d]")) %T>% 
-    {flog.info("Records with nonnumeric HS codes: %s",
-              sum(.$nonnumerichs))} %>% 
+    mutate_(nonnumerichs = ~stringr::str_detect(hs, "[^\\d]")) %>% 
     filter_(~!nonnumerichs) %T>%
     {flog.info("Records after filtering out nonnumeric HS: %s",
-              nrow(.))} # %>% 
-    # mutate_(hs = ~as.numeric(hs))
-  
+              nrow(.))} %>% 
+    select_(~-nonnumerichs) %>% 
+    filter_(~stringr::str_length(hs) >= 6) %T>%
+    {flog.info("Records after filtering out HS shorter than 6: %s",
+              nrow(.))} %T>% 
+    assertr::verify(chapter == stringr::str_extract(hs, "^.{2}")) %>% 
+    select_(~-chapter) %>% 
+    mutate_(hs6 = ~stringr::str_extract(hs, "^.{6}")) %>% 
+    mutate_at(starts_with("hs"), as.numeric) %>% 
+    # Subselection of HS6 falling in intervals
+    # http://stackoverflow.com/a/24766832
+    filter_(~findInterval(
+      hs6,
+      as.vector(do.call(rbind, hs6agri))) %% 2 != 0) %>% 
+    select_(~-hs6) %T>%
+    {flog.info("Records after filtering out HS outside agri intervals: %s",
+               nrow(.))} %>% 
+    arrange_(~year, ~reporter, ~flow, ~hs)
 }
