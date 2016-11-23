@@ -40,6 +40,9 @@ loadtldata <- function(file = file.path(
     filter_(~chapter %in% sprintf("%02d", hschaps)) %T>%
     {flog.info("Records after filtering by HS-chapters: %s",
               nrow(.))} %>% 
+    distinct() %T>% 
+    {flog.info("Records after removing duplicates: %s",
+               nrow(.))} %>% 
     mutate_(nonnumerichs = ~stringr::str_detect(hs, "[^\\d]")) %>% 
     filter_(~!nonnumerichs) %T>%
     {flog.info("Records after filtering out nonnumeric HS: %s",
@@ -47,7 +50,7 @@ loadtldata <- function(file = file.path(
     select_(~-nonnumerichs) %>% 
     filter_(~stringr::str_length(hs) >= 6) %T>%
     {flog.info("Records after filtering out HS shorter than 6: %s",
-              nrow(.))} %T>% 
+              nrow(.))} %>% 
     assertr::verify(chapter == stringr::str_extract(hs, "^.{2}")) %>% 
     select_(~-chapter) %>% 
     mutate_(hs6 = ~stringr::str_extract(hs, "^.{6}")) %>% 
@@ -60,4 +63,5 @@ loadtldata <- function(file = file.path(
     {flog.info("Records after filtering out HS outside agri intervals: %s",
                nrow(.))} %>% 
     arrange_(~year, ~reporter, ~flow, ~hs)
+    
 }
