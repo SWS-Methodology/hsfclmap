@@ -3,6 +3,7 @@
 export(alignHSLength)
 export(esdata2faoarea)
 export(hsInRange)
+export(loaddatafromweb)
 export(loadesdata)
 export(loadgeonom)
 export(loadtldata)
