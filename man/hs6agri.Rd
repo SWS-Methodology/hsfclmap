@@ -16,16 +16,5 @@ hs6agri
 Probably this one is better than previous `hs6faointerest` 
   as we got it after Carola discovered a mistake in old data set.
 }
-\examples{
-\dontrun{
-   ... \%>\% 
-   # Subselection of HS6 falling in intervals
-   # http://stackoverflow.com/a/24766832
-   filter_(~findInterval(
-     hs6,
-     as.vector(do.call(rbind, hs6agri))) \%\% 2 != 0) \%>\% 
-   ...
-}
-}
 \keyword{datasets}
 

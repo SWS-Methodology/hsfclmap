@@ -53,10 +53,9 @@ loadtldata <- function(file = file.path(
     mutate_(hs6 = ~stringr::str_extract(hs, "^.{6}")) %>% 
     mutate_at(starts_with("hs"), as.numeric) %>% 
     # Subselection of HS6 falling in intervals
-    # http://stackoverflow.com/a/24766832
-    filter_(~findInterval(
-      hs6,
-      as.vector(do.call(rbind, hs6agri))) %% 2 != 0) %>% 
+    filter_(
+      ~hs6 %in% 
+        unlist(apply(hs6agri, 1, function(x) seq.int(x[1], x[2])))) %>% 
     select_(~-hs6) %T>%
     {flog.info("Records after filtering out HS outside agri intervals: %s",
                nrow(.))} %>% 

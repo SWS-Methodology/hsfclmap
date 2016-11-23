@@ -57,14 +57,4 @@
 #'   \item{ToCode}{Numeric. Upper limit of HS range.}
 #' }
 #' 
-#' @examples 
-#' \dontrun{
-#'    ... %>% 
-#'    # Subselection of HS6 falling in intervals
-#'    # http://stackoverflow.com/a/24766832
-#'    filter_(~findInterval(
-#'      hs6,
-#'      as.vector(do.call(rbind, hs6agri))) %% 2 != 0) %>% 
-#'    ...
-#' }
 "hs6agri"
