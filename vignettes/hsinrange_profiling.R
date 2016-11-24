@@ -1,9 +1,13 @@
 library(hsfclmap)
 library(stringr)
 library(dplyr, warn.conflicts = FALSE)
-library(foreach)
-library(doParallel)
-registerDoParallel(cores = detectCores(all.tests = TRUE))
+
+cores <- parallel::detectCores(all.tests = TRUE)
+if(cores > 1) {
+  library(foreach)
+  library(doParallel)
+  parallel::registerDoParallel(cores = cores)
+}
 
 esdata14 <- loadesdata(file.path(
   Sys.getenv("HOME"), 
@@ -58,7 +62,10 @@ esdatafcl %>%
   ungroup() %>% 
   summarize(sum(nofcl)/n()) %>% unlist %>% unname
 
-esdatafcl14 %T>%
+
+# Printing statistics on unmapped HS codes
+# and saving the codes in csv files
+esdatafcl %T>%
 {print(paste("Total number of trade records:", 
              nrow(.)))} %T>% 
   {print(paste("Unique HS codes:", 
@@ -88,3 +95,37 @@ esdatafcl14 %>%
   filter(hs == onehs) %>%
   distinct() %>% 
   filter(is.na(fcl))
+
+hsunmatched <- esdatafcl %>%
+  filter(is.na(fcl)) %>% 
+  select(area, flow, hs = hsorig) %>% 
+  `<<-`(traderecordsunmatched, .) %>% 
+  select(hs) %>% 
+  distinct() %>% unlist %>% unname
+
+
+unmappedhs <- esdatafcl %T>% 
+  { cat("Total records:", nrow(.), "\n") } %>% 
+  mutate(hs6 = stringr::str_extract(hsorig, "^\\d{2,6}")) %>% 
+  filter(hs6 %in% hs6faointerest) %T>% 
+  { cat("Total records of interest:", nrow(.), "\n") } %>% 
+  filter(is.na(fcl)) %T>% 
+  { cat("Records of interest with NA:", nrow(.), "\n") } %>% 
+  select(hsorig) %>% 
+  distinct() %T>% 
+  { cat("Unique unmapped CN8 codes:", nrow(.), "\n") } %>% 
+  unname %>% unlist
+  
+# How many unmapped HS codes when we look across all EU countries
+esdatafcl %>% 
+  select(-hsext) %>% 
+  mutate(hs6 = stringr::str_extract(hsorig, "^\\d{2,6}")) %>% 
+  filter(hsorig %in% hs6faointerest) %>% 
+  group_by(hsorig) %>% 
+  mutate(fclpositive = sum(!is.na(fcl))) %>% 
+  ungroup() %>% 
+  filter(fclpositive == 0) %>% 
+  select(hsorig) %>% 
+  distinct() %>% 
+  nrow()
+

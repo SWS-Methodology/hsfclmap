@@ -38,3 +38,23 @@
 #'   \item{fcl}{Interger. FCL code.}
 #' }
 "hsfclmap3"
+
+#' 6-digit HS codes what are of FAO's interest
+#'
+#' Taken from `HS2012-6 digits Standard.xls` provided by Claudia and stored in `data-raw` folder of hsfclmap package.
+#'   
+#' @format A character vector of length 1061
+"hs6faointerest"
+
+#' Another variant of HS codes of FAO's interest
+#' 
+#' Probably this one is better than previous `hs6faointerest` 
+#'   as we got it after Carola discovered a mistake in old data set.
+#' 
+#' @format A data frame with 42 rows and 2 columns
+#' \describe{
+#'   \item{FromCode}{Numeric. Lower limit of HS range.}
+#'   \item{ToCode}{Numeric. Upper limit of HS range.}
+#' }
+#' 
+"hs6agri"
