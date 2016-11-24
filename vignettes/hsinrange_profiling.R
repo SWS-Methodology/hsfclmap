@@ -58,7 +58,7 @@ esdatafcl %>%
   ungroup() %>% 
   summarize(sum(nofcl)/n()) %>% unlist %>% unname
 
-esdatafcl %T>%
+esdatafcl14 %T>%
 {print(paste("Total number of trade records:", 
              nrow(.)))} %T>% 
   {print(paste("Unique HS codes:", 
@@ -80,3 +80,11 @@ esdatafcl %T>%
     row.names = FALSE)
 
 
+onehs <- unmatchedhs %$% hs %>% extract(1)
+
+esdatafcl14 %>%
+  select(area, flow, hsorig, fcl) %>% 
+  mutate(hs = as.numeric(hsorig)) %>% 
+  filter(hs == onehs) %>%
+  distinct() %>% 
+  filter(is.na(fcl))
