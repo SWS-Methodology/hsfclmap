@@ -92,6 +92,8 @@ hsInRange <- function(hs,
           if(nrow(mapdataset) == 0) fcl <- as.integer(NA)
           if(nrow(mapdataset) > 0) fcl <-  mapdataset %>%
             select_(~fcl) %>%
+            # We take only unique FCL codes
+            distinct() %>% 
             unlist() %>% unname()
           
           data_frame(id = currentid, 
