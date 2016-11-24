@@ -54,7 +54,7 @@ loadtldata <- function(file = file.path(
     assertr::verify(chapter == stringr::str_extract(hs, "^.{2}")) %>% 
     select_(~-chapter) %>% 
     mutate_(hs6 = ~stringr::str_extract(hs, "^.{6}")) %>% 
-    mutate_at(starts_with("hs"), as.numeric) %>% 
+    mutate_(hs6 = ~as.numeric(hs6)) %>% 
     # Subselection of HS6 falling in intervals
     filter_(
       ~hs6 %in% 
