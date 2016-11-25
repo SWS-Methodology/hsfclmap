@@ -1,5 +1,6 @@
 # Filter csv file by value 
 
+zcat ~/ce_combinednomenclature_unlogged_2014.csv.gz | head | awk -F , '{ if ($1 == 02) print $2, $4 }'
 
 cut -d , -f 2,4-6 input.csv
 cut -f1-5,10-20 data.txt
