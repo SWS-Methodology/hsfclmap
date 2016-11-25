@@ -1,0 +1,16 @@
+# Filter csv file by value 
+
+
+cut -d , -f 2,4-6 input.csv
+cut -f1-5,10-20 data.txt
+
+awk '{ if ($4 >= 1 && $4 <= 10) print $1 }' sample.txt
+
+bzcat input.csv.bz2 | cut -d , -f 3 | bzip2 > col3.csv.bz2
+
+# gzcat / zcat
+
+
+ awk '$1 == 5 && $7 == "PASS" { print }' data.vcf
+
+
