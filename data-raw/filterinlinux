@@ -1,17 +1,49 @@
+#!/usr/bin/awk -f
+
 # Filter csv file by value 
 
-zcat ~/ce_combinednomenclature_unlogged_2014.csv.gz | head | awk -F , '{ if ($1 == 02) print $2, $4 }'
-
-cut -d , -f 2,4-6 input.csv
-cut -f1-5,10-20 data.txt
-
-awk '{ if ($4 >= 1 && $4 <= 10) print $1 }' sample.txt
-
-bzcat input.csv.bz2 | cut -d , -f 3 | bzip2 > col3.csv.bz2
-
-# gzcat / zcat
+# zcat ~/ct_tariffline_unlogged_2014.csv.gz | data-raw/filterinlinux | uniq | gzip > ~/tl2014.csv.gz
 
 
- awk '$1 == 5 && $7 == "PASS" { print }' data.vcf
+BEGIN { 
+  FS = ",";
+chaps[1]== ""
+chaps[2]== ""
+chaps[3]== ""
+chaps[4]== ""
+chaps[5]== ""
+chaps[6]== ""
+chaps[7]== ""
+chaps[8]== ""
+chaps[9]== ""
+chaps[10]== ""
+chaps[11]== ""
+chaps[12]== ""
+chaps[13]== ""
+chaps[14]== ""
+chaps[15]== ""
+chaps[16]== ""
+chaps[17]== ""
+chaps[18]== ""
+chaps[19]== ""
+chaps[20]== ""
+chaps[21]== ""
+chaps[22]== ""
+chaps[23]== ""
+chaps[24]== ""
+chaps[33]== ""
+chaps[35]== ""
+chaps[38]== ""
+chaps[40]== ""
+chaps[41]== ""
+chaps[42]== ""
+chaps[43]== ""
+chaps[50]== ""
+chaps[51]== ""
+chaps[52]== ""
+chaps[53]== ""
+
+}
+{ if ($1 in chaps) print $1 "," $2 "," $3 "," $6 "," $8 }
 
 
