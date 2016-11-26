@@ -7,6 +7,7 @@
 
 BEGIN { 
   FS = ",";
+  OFS = ",";
 chaps[1]== ""
 chaps[2]== ""
 chaps[3]== ""
@@ -44,6 +45,6 @@ chaps[52]== ""
 chaps[53]== ""
 
 }
-{ if ($1 in chaps) print $1 "," $2 "," $3 "," $6 "," $8 }
+{ if ($1 in chaps) print $1 $2 $3 $6 $8 }
 
 
