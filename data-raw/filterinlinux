@@ -45,6 +45,6 @@ chaps[52]== ""
 chaps[53]== ""
 
 }
-{ if ($1 in chaps) print $1 $2 $3 $6 $8 }
+{ if ($1 in chaps) print $1, $2, $3, $6, $8 }
 
 
