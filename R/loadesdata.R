@@ -19,11 +19,10 @@ loadesdata <- function(file = file.path(
   readr::read_csv(file,
                   na = "NA",
                   skip = 1L,
-                  col_types = "ccccii____",
+                  col_types = "cc_cii____",
                   col_names = c(
                     "chapter",
                     "reporter",
-                    "partner",
                     "hs",
                     "flow",
                     "stat_regime"
@@ -42,7 +41,6 @@ loadesdata <- function(file = file.path(
     filter_(~stringr::str_detect(hs,
                                  "^[[:digit:]]+$")) %>%
     assertr::verify(nrow(.) > 0) %>% 
-    select_(~-partner) %>% 
     mutate_(reporter = ~as.numeric(reporter))
   
 }
