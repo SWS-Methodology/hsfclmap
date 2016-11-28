@@ -13,7 +13,7 @@
 #' @import magrittr
 #' @import futile.logger
 
-loadtldata <- function(
+loadtradefile <- function(
   file = file.path(
     Sys.getenv("HOME"),
     "ct_tariffline_unlogged_2014.csv.gz"),
