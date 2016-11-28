@@ -89,18 +89,24 @@ hsInRange <- function(hs,
           
           # If no corresponding HS range is 
           # available return empty integer
-          if(nrow(mapdataset) == 0) fcl <- as.integer(NA)
-          if(nrow(mapdataset) > 0) fcl <-  mapdataset %>%
-            select_(~fcl) %>%
-            # We take only unique FCL codes
-            distinct() %>% 
-            unlist() %>% unname()
+          if(nrow(mapdataset) == 0) 
+            fcl <- as.integer(NA)
+          
+          if(nrow(mapdataset) == 1L)
+             fcl <- mapdataset$fcl
+          
+             # Selection of the narrowest hs range
+          if(nrow(mapdataset) > 1L) {
+            fcl <- mapdataset %>%
+              mutate_(hsrange = ~tocode - fromcode) %>% 
+              filter_(~hsrange == min(hsrange)) %>% 
+              select_(~fcl) %>% 
+              unlist() %>% unname()
+          }
           
           data_frame(id = currentid, 
                      hs = hs,
-                     fcl = fcl
-                     )
-                     
+                     fcl = fcl)
         }
       ) 
       
