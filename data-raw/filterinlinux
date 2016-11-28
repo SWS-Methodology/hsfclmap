@@ -45,6 +45,9 @@ chaps["52"]== ""
 chaps["53"]== ""
 
 }
-{ if ($1 in chaps) print $1, $2, $3, $6, $8 }
+# TL
+# { if ($1 in chaps) print $1, $2, $3, $6, $8 }
+# ES
+{ if ($1 in chaps) print $1, $2, $4, $5, $6, $7 }
 
 
