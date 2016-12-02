@@ -22,41 +22,36 @@ trade %<>% do(hsInRange(.$hs, .$reporter, .$flow,
 layout.glimpse <- function(level, tbl, ...) dplyr::as.tbl(tbl)
 appender.glimpse <- function(tbl) tbl
 
-trade %<>% 
-    # Mapping statistics
+trade <- trade %>% 
+  # Mapping statistics
   group_by(id) %>% 
   mutate_(multlink = ~length(unique(fcl)) > 1,
           nolink   = ~any(is.na(fcl))) %>% 
   ungroup() %>% 
-  arrange_(~area, ~flow, ~hsorig) %T>% 
-  {
-    # Export nolinks to csv
-    filter_(., ~nolink) %T>% 
-    write.csv(file = file.path(reportdir, "nolinks.csv")) %>% 
-    filter_(~multlink) %T>%
-    write.csv(file = file.path(reportdir, "multilinks.csv"))
-    flog.info("Reports were written to %s/",
-              reportdir)
-    } %T>% 
-          {group_by_(., ~id) %>%
-              summarize_(multlink = ~sum(any(multlink)),
-                      nolink = ~sum(any(nolink))) %>% 
-              summarize_(totalrecsmulti = ~sum(multlink),
-                         totalnolink = ~sum(nolink),
-                         propmulti = ~sum(multlink) / n(),
-                         propnolink = ~sum(nolink) / n()) %>% 
-                         {flog.info("Multi and no link:", ., capture = TRUE)}
-          }   
-# A tibble: 1 × 4
-# totalrecsmulti totalnolink  propmulti  propnolink
-# <int>       <int>      <dbl>       <dbl>
-#   1           2341         265 0.02570776 0.002910105
+  arrange_(~area, ~flow, ~hsorig) 
 
-# # A tibble: 1 × 4
-# totalrecsmulti totalnolink  propmulti  propnolink
-# <int>       <int>      <dbl>       <dbl>
-#   1           4718         265 0.05181085 0.002910105
-#   
-#    area flow fromcode  tocode  fcl startyear
-# 1   11    1  1063910 1063910 1171        NA
-# 2   11    1  1063910 1063910 1083        NA
+trade %>% 
+  filter_(~nolink) %>% 
+        select_(~area, ~flow, hs = ~hsorig) %>% 
+        write.csv(file = file.path(reportdir, "nolinks.csv"),
+                  row.names = FALSE) 
+
+trade %>%  
+      filter_(~multlink) %>%
+      select_(~area, ~flow, hs = ~hsorig, ~fcl) %>%   
+      write.csv(file = file.path(reportdir, "multilinks.csv"),
+                row.names = FALSE)
+
+flog.info("Reports in %s/",
+              reportdir)
+
+trade %>% 
+  group_by_(~id) %>%
+  summarize_(multlink = ~sum(any(multlink)),
+             nolink = ~sum(any(nolink))) %>% 
+  summarize_(totalrecsmulti = ~sum(multlink),
+             totalnolink = ~sum(nolink),
+             propmulti = ~sum(multlink) / n(),
+             propnolink = ~sum(nolink) / n()) %>% 
+             {flog.info("Multi and no link:", ., capture = TRUE)}
+
