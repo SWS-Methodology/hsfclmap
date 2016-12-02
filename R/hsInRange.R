@@ -34,6 +34,8 @@ hsInRange <- function(hs,
                 length(flowname)))
     stop("Vectors of different length")
   
+  stopifnot("linkid" %in% colnames(mapdataset))
+  
   df <- data_frame(hs = hs,
                    areacode = areacode,
                    flowname = flowname) %>% 
@@ -58,7 +60,8 @@ hsInRange <- function(hs,
         return(data_frame(
           id = subdf$id,
           hs = subdf$hs,                                                
-          fcl = as.integer(NA)))
+          fcl = as.integer(NA),
+          linkid = as.integer(NA)))
       
       # Align length of HS codes in map and dataset
       # to make possible comparison of numbers
@@ -89,24 +92,29 @@ hsInRange <- function(hs,
           
           # If no corresponding HS range is 
           # available return empty integer
-          if(nrow(mapdataset) == 0) 
+          if(nrow(mapdataset) == 0) {
             fcl <- as.integer(NA)
+            linkid <- as.integer(NA)
+          }
           
-          if(nrow(mapdataset) == 1L)
+          if(nrow(mapdataset) == 1L) {
              fcl <- mapdataset$fcl
-          
+             linkid <- mapdataset$linkid
+          }
              # Selection of the narrowest hs range
           if(nrow(mapdataset) > 1L) {
-            fcl <- mapdataset %>%
+            mapdataset <- mapdataset %>%
               mutate_(hsrange = ~tocode - fromcode) %>% 
-              filter_(~hsrange == min(hsrange)) %>% 
-              select_(~fcl) %>% 
-              unlist() %>% unname()
+              filter_(~hsrange == min(hsrange))
+            
+            fcl <- mapdataset$fcl
+            linkid <- mapdataset$linkid
           }
           
           data_frame(id = currentid, 
                      hs = hs,
-                     fcl = fcl)
+                     fcl = fcl,
+                     linkid = linkid)
         }
       ) 
       
@@ -126,7 +134,8 @@ hsInRange <- function(hs,
             flow = ~flowname,
             ~hsorig,
             hsext = ~hs,
-            ~fcl)
+            ~fcl,
+            ~linkid)
 
   df
 }
