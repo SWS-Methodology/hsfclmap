@@ -1,4 +1,17 @@
-trade <- es2014
+library(magrittr)
+library(stringr)
+library(futile.logger)
+library(dplyr, warn.conflicts = FALSE)
+library(hsfclmap)
+
+cores <- parallel::detectCores(all.tests = TRUE)
+if(cores > 1) {
+  library(foreach)
+  library(doParallel)
+  doParallel::registerDoParallel(cores = cores)
+}
+
+trade <- esdata13
 tariffline <- FALSE
 reportdir <- file.path(
   tempdir(), 
@@ -8,7 +21,13 @@ stopifnot(!file.exists(reportdir))
 dir.create(reportdir, recursive = TRUE)
 
 if(!tariffline)
-  trade %<>%  esdata2faoarea(loadgeonom())
+  trade %<>%  esdata2faoarea(loadgeonom()) else {
+   m49faomap <- loaddatafromweb(
+"https://github.com/SWS-Methodology/faoswsTrade/blob/master/data/m49faomap.RData?raw=true")
+  trade %<>% 
+    left_join(m49faomap, by = c("reporter" = "m49")) %>% 
+    select_(~-reporter, reporter = ~fao)
+  }
 
 hsfclmap4 <- hsfclmap3 %>% 
                  filter(str_detect(fromcode, "^\\d+$"),
@@ -17,7 +36,7 @@ hsfclmap4 <- hsfclmap3 %>%
 
 trade %<>% do(hsInRange(.$hs, .$reporter, .$flow, 
                hsfclmap4,
-               parallel = TRUE)) 
+               parallel = cores > 1L)) 
 
 layout.glimpse <- function(level, tbl, ...) dplyr::as.tbl(tbl)
 appender.glimpse <- function(tbl) tbl
