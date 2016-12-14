@@ -29,6 +29,10 @@ if(!tariffline)
     select_(~-reporter, reporter = ~fao)
   }
 
+if(tariffline) 
+  trade %<>% 
+  mutate_(flow = ~recode(flow, '4' = 1L, '3' = 2L))
+
 hsfclmap4 <- hsfclmap3 %>% 
                  filter(str_detect(fromcode, "^\\d+$"),
                         str_detect(tocode, "^\\d+$")) %>% 
@@ -76,7 +80,25 @@ trade %>%
 
 # Remove ES reporters from TL
 
-esreporters <- unique(esdata14_fcl_faoarea$area)
+esreporters <- unique(esdatafcl14$area)
 trade <- trade %>% 
   filter(!area %in% esreporters)
+
+# Idea for split ranges
+
+x <- tibble::tribble(
+  ~year, ~fcl,
+  1, 1,
+  2, 1,
+  3, 1,
+  4, 2,
+  5, 2,
+  6, 1, 
+  7, 1)
+
+x %>% 
+  mutate(change = fcl != lag(fcl),
+         change = ifelse(is.na(change), FALSE, change),
+         change = cumsum(change))
+
 
