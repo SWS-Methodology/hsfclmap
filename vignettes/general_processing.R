@@ -74,3 +74,9 @@ trade %>%
              propnolink = ~sum(nolink) / n()) %>% 
              {flog.info("Multi and no link:", ., capture = TRUE)}
 
+# Remove ES reporters from TL
+
+esreporters <- unique(esdata14_fcl_faoarea$area)
+trade <- trade %>% 
+  filter(!area %in% esreporters)
+
