@@ -8,7 +8,6 @@ hsfclmap2 %>%
   # hs range can point to different fcl codes over the years
   # we want to reduce number of identical links from 
   # different years into records with year ranges
-  # and keep 2050 year
   # We can not just group by fromcode, tocode and fcl,
   # as one range can fall into another
   # and we don't want to rely on rule 
