@@ -16,4 +16,28 @@ es2014missing <- XLConnect::readWorksheetFromFile(file.path("data-raw",
                                           sheet = "nolinks",
                                           endCol = 10L,
                                           endRow = 266L) %>% 
-  select(area, flow, hsorig, fcl = Col10)
+  select(area, flow, hs = hsorig, fcl = Col10) %>% 
+  mutate_at(c("area", "flow", "fcl"), as.integer)
+
+
+
+# Claudia
+# Date: Thu, 15 Dec 2016 14:40:30 +0000
+# 
+# Apart from Canada, please find attached the missing links you sent us. Please note that where I put NO
+# +the country file could be wrong (eg see 169 Paraguay). 
+
+tl2014missing <- XLConnect::readWorksheetFromFile(
+  file.path("data-raw",
+            "missinglinks_tariffline_2014.xlsx"),
+  header = T,
+  sheet = "Sheet1") %>% 
+  rename(fcl = FCL) %>% 
+  filter(fcl != "NO") %>% 
+  mutate_at(c("area", "flow", "fcl"), as.integer)
+
+trade2014missing <- bind_rows(
+  tl2014missing, es2014missing) %>% 
+  mutate(hs = as.character(format(hs, scientific = FALSE)),
+         hs = stringr::str_trim(hs)) %>% 
+  as.tbl
