@@ -1,4 +1,4 @@
-hsfclmap2 %>% 
+hsfclmap4 <- hsfclmap2 %>% 
   select(mdbyear, area, flow, fromcode, tocode, fcl) %>% 
   # Priority of records
   # Younger records have higher priority
