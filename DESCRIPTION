@@ -22,4 +22,8 @@ Imports:
   magrittr,
   plyr,
   stringr
+Suggests:
+  foreach,
+  parallel,
+  doParallel
   
