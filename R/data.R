@@ -30,12 +30,14 @@
 #'
 #' @format A data frame with 864557 rows and 8 columns
 #' \describe{
-#'   \item{startyear}{Integer. Year starting from which specified link is actual.}
-#'   \item{area}{Integer. FAO area code.}
+#'   \item{area}{Integer. FAO area code of reporter.}
 #'   \item{flow}{Interger. Import/Export}
 #'   \item{fromcode}{Character. Starting HS code.}
 #'   \item{tocode}{Character. Ending HS code.}
 #'   \item{fcl}{Interger. FCL code.}
+#'   \item{startyear}{Integer. Year starting from which specified link is actual.}
+#'   \item{endyear}{Integer. Year up to which specified link is actual.}
+#'   \item{recordnumb}{Numeric. Ordered id of record. Bigger ids have higher priority.}
 #' }
 "hsfclmap3"
 

@@ -4,21 +4,23 @@
 \name{hsfclmap3}
 \alias{hsfclmap3}
 \title{HS->FCL country/year specific mapping table without duplicate links.}
-\format{A data frame with 885013 rows and 6 columns
+\format{A data frame with 864557 rows and 8 columns
 \describe{
-  \item{startyear}{Integer. Year starting from which specified link is actual.}
-  \item{area}{Integer. FAO area code.}
+  \item{area}{Integer. FAO area code of reporter.}
   \item{flow}{Interger. Import/Export}
   \item{fromcode}{Character. Starting HS code.}
   \item{tocode}{Character. Ending HS code.}
   \item{fcl}{Interger. FCL code.}
+  \item{startyear}{Integer. Year starting from which specified link is actual.}
+  \item{endyear}{Integer. Year up to which specified link is actual.}
+  \item{recordnumb}{Numeric. Ordered id of record. Bigger ids have higher priority.}
 }}
 \usage{
 hsfclmap3
 }
 \description{
 A dataset containing mapping table from Harmonized System country specific 
-codes to FAO Commodity List codes. Also columns for dubugging of MDB-export process excluded.
+codes to FAO Commodity List codes. 2014 links are addded.
 }
 \keyword{datasets}
 
