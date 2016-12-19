@@ -53,5 +53,5 @@ hsfclmap3 <- hsfclmap2 %>%
   mapupdate(trade2014missing %>% 
               rename(fromcode = hs), startyear = 2014L)
 
-save(hsfclmap3, file = "data-raw/hsfclmap3.RData")
+save(hsfclmap3, file = "data/hsfclmap3.RData", compress = "xz")
   
