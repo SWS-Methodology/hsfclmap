@@ -34,7 +34,7 @@ hsInRange <- function(hs,
                 length(flowname)))
     stop("Vectors of different length")
   
-  stopifnot("linkid" %in% colnames(mapdataset))
+  stopifnot("recordnumb" %in% colnames(mapdataset))
   
   df <- data_frame(hs = hs,
                    areacode = areacode,
@@ -61,7 +61,7 @@ hsInRange <- function(hs,
           id = subdf$id,
           hs = subdf$hs,                                                
           fcl = as.integer(NA),
-          linkid = as.integer(NA)))
+          recordnumb = as.numeric(NA)))
       
       # Align length of HS codes in map and dataset
       # to make possible comparison of numbers
@@ -94,12 +94,12 @@ hsInRange <- function(hs,
           # available return empty integer
           if(nrow(mapdataset) == 0) {
             fcl <- as.integer(NA)
-            linkid <- as.integer(NA)
+            recordnumb <- as.numeric(NA)
           }
           
           if(nrow(mapdataset) == 1L) {
              fcl <- mapdataset$fcl
-             linkid <- mapdataset$linkid
+             recordnumb <- mapdataset$recordnumb
           }
              # Selection of the narrowest hs range
           if(nrow(mapdataset) > 1L) {
@@ -107,14 +107,21 @@ hsInRange <- function(hs,
               mutate_(hsrange = ~tocode - fromcode) %>% 
               filter_(~hsrange == min(hsrange))
             
+            # If there are still several options
+            # we choose the yougest
+            if(nrow(mapdataset) > 1L) {
+              mapdataset <- mapdataset %>%
+               filter_(~recordnumb == max(recordnumb))
+            }
+            
             fcl <- mapdataset$fcl
-            linkid <- mapdataset$linkid
+            recordnumb <- mapdataset$recordnumb
           }
           
           data_frame(id = currentid, 
                      hs = hs,
                      fcl = fcl,
-                     linkid = linkid)
+                     recordnumb = recordnumb)
         }
       ) 
       
@@ -135,7 +142,7 @@ hsInRange <- function(hs,
             ~hsorig,
             hsext = ~hs,
             ~fcl,
-            ~linkid)
+            ~recordnumb)
 
   df
 }
