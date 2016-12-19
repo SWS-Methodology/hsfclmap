@@ -1,4 +1,9 @@
 hsfclmap3 <- hsfclmap2 %>% 
+  # There are 2228 cases where mdb file name is CLA,
+  # and it absents in Onno's register
+  # But in one directory we fould mix of CLA and ECU
+  # so we change CLA to ECU
+  mutate(area = if_else(mdbarea == "CLA", 58L, area)) %>% 
   select(mdbyear, area, flow, fromcode, tocode, fcl) %>% 
   # Priority of records
   # Younger records have higher priority
