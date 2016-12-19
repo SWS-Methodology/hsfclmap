@@ -114,6 +114,8 @@ hsInRange <- function(hs,
                filter_(~recordnumb == max(recordnumb))
             }
             
+            stopifnot(nrow(mapdataset) == 1L)
+            
             fcl <- mapdataset$fcl
             recordnumb <- mapdataset$recordnumb
           }
