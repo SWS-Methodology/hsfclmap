@@ -41,3 +41,7 @@ trade2014missing <- bind_rows(
   mutate(hs = as.character(format(hs, scientific = FALSE)),
          hs = stringr::str_trim(hs)) %>% 
   as.tbl
+
+rm(tl2014missing, es2014missing)
+
+save(trade2014missing, file = "data/trade2014missing.RData")

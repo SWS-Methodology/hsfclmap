@@ -58,3 +58,16 @@
 #' }
 #' 
 "hs6agri"
+
+
+#' Update of mapping data table for trade data 2014
+#' 
+#' 
+#' @format A data frame with 563 rows and 4 columns
+#' \describe{
+#'   \item{area}{Integer. Reporter code.}
+#'   \item{flow}{Integer. Trade direction.}
+#'   \item{hs}{Character. HS commodity code.}
+#'   \item{fcl}{Integer. FCL commodity code.}
+#' }
+"trade2014missing"
