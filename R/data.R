@@ -26,9 +26,9 @@
 #' HS->FCL country/year specific mapping table without duplicate links.
 #' 
 #' A dataset containing mapping table from Harmonized System country specific 
-#' codes to FAO Commodity List codes. Also columns for dubugging of MDB-export process excluded.
+#' codes to FAO Commodity List codes. 2014 links are addded.
 #'
-#' @format A data frame with 885013 rows and 6 columns
+#' @format A data frame with 864557 rows and 8 columns
 #' \describe{
 #'   \item{startyear}{Integer. Year starting from which specified link is actual.}
 #'   \item{area}{Integer. FAO area code.}

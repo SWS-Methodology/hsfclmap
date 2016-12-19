@@ -1,4 +1,4 @@
-hsfclmap4 <- hsfclmap2 %>% 
+hsfclmap3 <- hsfclmap2 %>% 
   select(mdbyear, area, flow, fromcode, tocode, fcl) %>% 
   # Priority of records
   # Younger records have higher priority
@@ -44,5 +44,9 @@ hsfclmap4 <- hsfclmap2 %>%
   mutate(endyear = if_else(endyear == 2013L, 2050L, endyear)) %>%
   select(-linkchange) %>% 
   # Some trash in fromcode
-  filter(grepl("^\\d+$", fromcode))
+  filter(grepl("^\\d+$", fromcode)) %>% 
+  mapupdate(trade2014missing %>% 
+              rename(fromcode = hs), startyear = 2014L)
+
+save(hsfclmap3, file = "data-raw/hsfclmap3.RData")
   
